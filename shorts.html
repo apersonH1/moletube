@@ -1,158 +1,23 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Moletube Shorts</title>
-  <link rel="stylesheet" href="style.css">
-  <style>
-    #shorts-container {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      overflow-y: scroll;
-      scroll-snap-type: y mandatory;
-      height: 100vh;
-      background: #001a13;
-    }
-
-    .short {
-      position: relative;
-      width: 400px;
-      height: 700px;
-      margin: 20px 0;
-      background: #012e25;
-      border-radius: 20px;
-      overflow: hidden;
-      scroll-snap-align: start;
-      box-shadow: 0 0 15px rgba(0,0,0,0.5);
-    }
-
-    iframe {
-      width: 100%;
-      height: 100%;
-      border: none;
-      border-radius: 20px;
-    }
-
-    .overlay {
-      position: absolute;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      background: rgba(0,0,0,0.4);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #ecfdf5;
-      font-size: 20px;
-      font-weight: bold;
-      opacity: 1;
-      transition: opacity 0.3s;
-      cursor: pointer;
-      z-index: 2;
-    }
-
-    .overlay.hidden {
-      opacity: 0;
-      pointer-events: none;
-    }
-
-    #shorts-loader {
-      color: #6ee7b7;
-      font-size: 18px;
-      text-align: center;
-      margin-top: 20px;
-    }
-  </style>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div id="sidebar">
-    <div class="tab" onclick="goHome()">🏠</div>
-    <div class="tab" onclick="loadShorts()">🎬</div>
-  </div>
+  <aside class="sidebar">
+    <a href="index.html">🏠</a>
+    <a href="shorts.html" class="active">🎞</a>
+  </aside>
 
-  <div id="shorts-container">
-    <div id="shorts-loader">Loading Shorts...</div>
-  </div>
+  <main class="shorts-container">
+    <div id="shortsFeed" class="shorts-feed"></div>
+  </main>
 
-  <script>
-    const shortsContainer = document.getElementById("shorts-container");
+  <div id="unmuteOverlay" class="overlay hidden">🔊 Click to unmute</div>
 
-    function goHome() {
-      window.location.href = "index.html";
-    }
-
-    function loadShorts() {
-      fetchShorts();
-    }
-
-    async function fetchShorts() {
-      try {
-        const res = await fetch("/api/shorts");
-        const data = await res.json();
-        const shorts = data || [];
-
-        shortsContainer.innerHTML = "";
-
-        for (const s of shorts) {
-          const shortDiv = document.createElement("div");
-          shortDiv.className = "short";
-
-          const iframe = document.createElement("iframe");
-          iframe.src = s.url + "?autoplay=1&mute=1&playsinline=1";
-          iframe.allow = "autoplay; encrypted-media; picture-in-picture";
-          shortDiv.appendChild(iframe);
-
-          const overlay = document.createElement("div");
-          overlay.className = "overlay";
-          overlay.textContent = "Click to unmute 🔊";
-          overlay.addEventListener("click", () => {
-            iframe.src = s.url + "?autoplay=1&mute=0&playsinline=1";
-            overlay.classList.add("hidden");
-          });
-          shortDiv.appendChild(overlay);
-
-          shortsContainer.appendChild(shortDiv);
-        }
-
-        shortsContainer.addEventListener("scroll", async () => {
-          if (shortsContainer.scrollTop + shortsContainer.clientHeight >= shortsContainer.scrollHeight - 10) {
-            await fetchMoreShorts();
-          }
-        });
-      } catch (err) {
-        console.error("Error loading shorts:", err);
-      }
-    }
-
-    async function fetchMoreShorts() {
-      const res = await fetch("/api/shorts");
-      const data = await res.json();
-      for (const s of data) {
-        const shortDiv = document.createElement("div");
-        shortDiv.className = "short";
-
-        const iframe = document.createElement("iframe");
-        iframe.src = s.url + "?autoplay=1&mute=1&playsinline=1";
-        iframe.allow = "autoplay; encrypted-media; picture-in-picture";
-        shortDiv.appendChild(iframe);
-
-        const overlay = document.createElement("div");
-        overlay.className = "overlay";
-        overlay.textContent = "Click to unmute 🔊";
-        overlay.addEventListener("click", () => {
-          iframe.src = s.url + "?autoplay=1&mute=0&playsinline=1";
-          overlay.classList.add("hidden");
-        });
-        shortDiv.appendChild(overlay);
-
-        shortsContainer.appendChild(shortDiv);
-      }
-    }
-
-    window.addEventListener("load", fetchShorts);
-  </script>
+  <script src="shorts.js" defer></script>
 </body>
 </html>
