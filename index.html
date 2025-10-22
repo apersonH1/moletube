@@ -1,55 +1,36 @@
 <!doctype html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>YouTube → nocookie embed logger</title>
-  <style>
-    body {
-      font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
-      padding: 20px;
-      max-width: 900px;
-      margin: auto;
-    }
-    input[type="text"] { width: 80%; padding: 8px; font-size: 16px; }
-    button { padding: 8px 12px; font-size: 16px; margin-left: 8px; cursor: pointer; }
-    iframe { width: 100%; height: 360px; border: 0; border-radius: 8px; margin-top: 12px; }
-    .embed, .log-item { margin-top: 18px; }
-    .log-item { border: 1px solid #ddd; padding: 10px; border-radius: 6px; }
-  </style>
+<meta charset="utf-8">
+<title>YouTube NoCookie Converter</title>
+<style>
+  body { font-family: sans-serif; background: #f4f6fb; display: flex; justify-content: center; padding: 2rem; }
+  .box { background: #fff; padding: 2rem; border-radius: 12px; width: 100%; max-width: 600px; box-shadow: 0 4px 18px rgba(0,0,0,.1); }
+  input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px; margin-top: 10px; font-size: 16px; }
+  button { margin-top: 10px; padding: 10px 20px; background: #0b74ff; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; }
+  iframe { width: 100%; height: 315px; margin-top: 15px; border-radius: 8px; border: none; }
+  .log-item { margin-top: 10px; padding: 10px; border: 1px solid #ddd; border-radius: 8px; background: #fafbff; }
+</style>
 </head>
 <body>
-  <h1>Convert YouTube → youtube-nocookie embed</h1>
-
-  <p>Paste any YouTube link below and click <strong>Convert & Log</strong> to share it.</p>
-
-  <div>
-    <input id="inputUrl" placeholder="https://www.youtube.com/watch?v=dQw4w9WgXcQ" />
+  <div class="box">
+    <h2>YouTube ➜ NoCookie Converter</h2>
+    <input id="urlInput" placeholder="Paste YouTube link here">
     <button id="convertBtn">Convert & Log</button>
+    <div id="result"></div>
+
+    <h3>Logged videos</h3>
+    <div id="logList">Loading...</div>
   </div>
 
-  <div id="result" class="embed"></div>
-
-  <h2>Logged videos</h2>
-  <div id="logged"></div>
-
 <script>
-// =============== URL PARSER ===================
-function parseYouTubeUrl(urlString) {
+function extractYouTubeId(url) {
   try {
-    const url = new URL(urlString);
-    const host = url.hostname.replace(/^www\./, '');
-    let videoId = null;
-
-    if (host.includes('youtu.be')) {
-      videoId = url.pathname.slice(1);
-    } else if (host.includes('youtube.com')) {
-      videoId = url.searchParams.get('v');
-      if (!videoId && url.pathname.includes('/embed/')) {
-        videoId = url.pathname.split('/embed/')[1];
-      }
-    }
-    return videoId ? videoId.replace(/[^A-Za-z0-9_-]/g, '') : null;
+    const parsed = new URL(url);
+    if (parsed.hostname.includes("youtu.be")) return parsed.pathname.slice(1);
+    if (parsed.searchParams.get("v")) return parsed.searchParams.get("v");
+    const match = parsed.pathname.match(/\/embed\/([^/?]+)/) || parsed.pathname.match(/\/shorts\/([^/?]+)/);
+    return match ? match[1] : null;
   } catch {
     return null;
   }
@@ -59,60 +40,47 @@ function makeNoCookieUrl(id) {
   return `https://www.youtube-nocookie.com/embed/${id}`;
 }
 
-// =============== UI FUNCTIONS ===================
-function createEmbed(src) {
-  const div = document.createElement('div');
-  div.className = 'log-item';
-  div.innerHTML = `
-    <a href="${src}" target="_blank">${src}</a><br>
-    <iframe src="${src}" allowfullscreen></iframe>
-  `;
-  return div;
-}
-
-// =============== SERVER CALLS ===================
-async function postLog(url) {
-  try {
-    await fetch('/api/log', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ url })
-    });
-  } catch (err) {
-    console.error('Error logging URL:', err);
-  }
+async function logUrl(url) {
+  await fetch("/api/log", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ url })
+  });
 }
 
 async function loadLogs() {
-  const container = document.getElementById('logged');
-  container.innerHTML = '<p><em>Loading logged videos...</em></p>';
-  try {
-    const res = await fetch('/api/list');
-    const data = await res.json();
-    container.innerHTML = '';
-    if (data.length === 0) {
-      container.innerHTML = '<p><em>No videos logged yet.</em></p>';
-      return;
-    }
-    data.slice().reverse().forEach(item => {
-      container.appendChild(createEmbed(item.url));
-    });
-  } catch (err) {
-    container.innerHTML = '<p style="color:red;">Failed to load logs.</p>';
-    console.error(err);
-  }
+  const res = await fetch("/api/list");
+  const data = await res.json();
+  const logList = document.getElementById("logList");
+  logList.innerHTML = "";
+  data.reverse().forEach(entry => {
+    const div = document.createElement("div");
+    div.className = "log-item";
+    div.innerHTML = `
+      <a href="${entry.url}" target="_blank">${entry.url}</a><br>
+      <iframe src="${entry.url}" allowfullscreen></iframe>
+    `;
+    logList.appendChild(div);
+  });
 }
 
-// =============== MAIN BUTTON HANDLER ===================
-document.getElementById('convertBtn').addEventListener('click', async () => {
-  const input = document.getElementById('inputUrl').value.trim();
-  if (!input) return alert('Paste a YouTube URL first.');
+document.getElementById("convertBtn").addEventListener("click", async () => {
+  const input = document.getElementById("urlInput").value.trim();
+  if (!input) return alert("Enter a YouTube URL");
 
-  const id = parseYouTubeUrl(input);
-  if (!id) return alert('Invalid YouTube URL.');
+  const id = extractYouTubeId(input);
+  if (!id) return alert("That doesn’t look like a valid YouTube URL.");
 
-  const embedUrl = makeNoCookieUrl(id);
-  document.getElementById('result').innerHTML = '';
-  document.getElementById('result').appendChild(createEmbed(embedUrl));
+  const noCookie = makeNoCookieUrl(id);
+  document.getElementById("result").innerHTML = `
+    <p><b>NoCookie URL:</b> <a href="${noCookie}" target="_blank">${noCookie}</a></p>
+    <iframe src="${noCookie}" allowfullscreen></iframe>
+  `;
+  await logUrl(noCookie);
+  await loadLogs();
+});
 
-  await p
+loadLogs();
+</script>
+</body>
+</html>
