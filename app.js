@@ -7,7 +7,7 @@ app.use(express.json());
 app.use(express.static("."));
 
 const LOG_FILE = "logs.json";
-const YT_API_KEY = "29679706";
+const YT_API_KEY = process.env.YT_API_KEY;
 
 // Read logs safely
 function readLogs() {
