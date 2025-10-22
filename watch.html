@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Moletube Watch</title>
+<style>
+  body {
+    font-family: "Poppins", sans-serif;
+    background: #001f16;
+    color: #ecfdf5;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  #player {
+    width: 80%;
+    max-width: 960px;
+    height: 540px;
+    border: none;
+    border-radius: 12px;
+    margin-top: 30px;
+  }
+  #title { font-size: 1.6em; margin-top: 20px; color: #6ee7b7; }
+  #channel { color: #a7f3d0; margin-bottom: 30px; }
+  .related-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+    width: 80%;
+    margin-bottom: 40px;
+  }
+  .related-card {
+    background: #064e3b;
+    border-radius: 12px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: transform .2s;
+  }
+  .related-card:hover { transform: scale(1.03); }
+  iframe {
+    width: 100%;
+    height: 160px;
+    border: none;
+  }
+  .info { padding: 10px; }
+</style>
+</head>
+<body>
+  <iframe id="player" allowfullscreen allow="autoplay; encrypted-media"></iframe>
+  <div id="title"></div>
+  <div id="channel"></div>
+  <h2 style="color:#6ee7b7;">Related Videos</h2>
+  <div id="related" class="related-grid"></div>
+
+<script>
+const params = new URLSearchParams(location.search);
+const id = params.get("id");
+const videoData = JSON.parse(localStorage.getItem("videoData") || "{}");
+document.getElementById("player").src = `https://www.youtube-nocookie.com/embed/${id}?autoplay=1&controls=1`;
+document.getElementById("title").textContent = videoData.title || "Unknown Video";
+document.getElementById("channel").textContent = videoData.channel || "Unknown Channel";
+
+async function loadRelated() {
+  const res = await fetch(`/api/search?q=${encodeURIComponent(videoData.channel || "trending")}`);
+  const data = await res.json();
+  const items = data.items || [];
+  const grid = items.map(v => {
+    const vid = v.id.videoId;
+    return `
+      <div class="related-card" onclick="openVideo('${vid}', '${v.snippet.title}', '${v.snippet.channelTitle}')">
+        <iframe src="https://www.youtube-nocookie.com/embed/${vid}" allowfullscreen></iframe>
+        <div class="info">
+          <div>${v.snippet.title}</div>
+          <div>${v.snippet.channelTitle}</div>
+        </div>
+      </div>`;
+  }).join("");
+  document.getElementById("related").innerHTML = grid;
+}
+
+function openVideo(id, title, channel) {
+  localStorage.setItem("videoData", JSON.stringify({ id, title, channel }));
+  window.location.href = "watch.html?id=" + id;
+}
+
+loadRelated();
+</script>
+</body>
+</html>
