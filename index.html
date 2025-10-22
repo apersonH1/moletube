@@ -63,23 +63,35 @@
       background: #011b13;
     }
 
-    .shorts-player {
-      width: 100%;
-      max-width: 420px;
-      aspect-ratio: 9 / 16;
-      border-radius: 16px;
-      overflow: hidden;
-      background: #000;
-      position: relative;
-      box-shadow: 0 0 20px #0f5132;
-    }
+   .shorts-player {
+  width: 100%;
+  max-width: 420px;
+  aspect-ratio: 9 / 16;
+  border-radius: 16px;
+  overflow: hidden;
+  background: #000;
+  position: relative;
+  box-shadow: 0 0 20px #0f5132;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
 
-    .short-video iframe {
-      width: 100%;
-      height: 100%;
-      border: none;
-    }
+.short-video {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
 
+.short-video iframe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border: none;
+  object-fit: cover; /* makes it fill the container */
+}
     .converter-container, .search-container {
       text-align: center;
       margin-top: 100px;
