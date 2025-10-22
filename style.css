@@ -7,6 +7,8 @@ body {
   height: 100vh;
   overflow: hidden;
 }
+
+/* Sidebar */
 #sidebar {
   width: 80px;
   background: #012e25;
@@ -16,6 +18,7 @@ body {
   padding-top: 20px;
   gap: 20px;
 }
+
 .tab {
   cursor: pointer;
   color: #a7f3d0;
@@ -23,36 +26,23 @@ body {
   transition: 0.3s;
   font-size: 24px;
 }
-.tab:hover { color: #34d399; }
+.tab:hover {
+  color: #34d399;
+}
+
+/* Main area */
 #main-content {
   flex: 1;
   overflow-y: auto;
   padding: 20px;
   position: relative;
 }
-h1 { color: #6ee7b7; }
-.video-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 16px;
-  margin-top: 80px;
+
+h1 {
+  color: #6ee7b7;
 }
-.video-card {
-  background: #064e3b;
-  border-radius: 12px;
-  padding: 8px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.3);
-  cursor: pointer;
-  transition: transform .2s;
-}
-.video-card:hover { transform: scale(1.03); }
-iframe {
-  width: 100%;
-  height: 200px;
-  border-radius: 8px;
-  border: none;
-}
-.video-info { padding: 6px; }
+
+/* Search bar */
 #search-bar {
   position: sticky;
   top: 0;
@@ -63,8 +53,9 @@ iframe {
   align-items: center;
   gap: 8px;
   z-index: 10;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.4);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
 }
+
 #search-input {
   flex: 1;
   padding: 8px;
@@ -72,6 +63,7 @@ iframe {
   border: none;
   font-size: 14px;
 }
+
 button {
   background: #059669;
   color: #ecfdf5;
@@ -80,5 +72,50 @@ button {
   padding: 8px 12px;
   cursor: pointer;
   font-weight: bold;
+  transition: background 0.2s;
 }
-button:hover { background: #10b981; }
+button:hover {
+  background: #10b981;
+}
+
+/* Video grid and cards */
+.video-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 16px;
+  margin-top: 80px;
+}
+
+.video-card {
+  background: #064e3b;
+  border-radius: 12px;
+  padding: 8px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.video-card:hover {
+  transform: scale(1.03);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+iframe {
+  width: 100%;
+  height: 200px;
+  border-radius: 8px;
+  border: none;
+}
+
+.video-info {
+  padding: 6px;
+  font-size: 14px;
+  line-height: 1.4;
+}
+.video-info div:first-child {
+  font-weight: bold;
+  color: #a7f3d0;
+}
+.video-info div:last-child {
+  color: #86efac;
+  font-size: 13px;
+}
