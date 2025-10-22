@@ -1,242 +1,198 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Moletube</title>
-<style>
-  body {
-    font-family: "Poppins", sans-serif;
-    background: linear-gradient(135deg, #022c22, #064e3b, #065f46);
-    color: #ecfdf5;
-    margin: 0;
-    display: flex;
-    justify-content: center;
-    align-items: center; /* centered vertically */
-    min-height: 100vh;
-    padding: 1rem;
-  }
-
-  .card {
-    background: linear-gradient(180deg, #d1fae5, #a7f3d0);
-    color: #065f46;
-    border-radius: 20px;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.25);
-    padding: 2rem;
-    width: 100%;
-    max-width: 720px;
-    backdrop-filter: blur(8px);
-    animation: popIn 0.6s ease;
-  }
-
-  @keyframes popIn {
-    from { opacity: 0; transform: scale(0.95); }
-    to { opacity: 1; transform: scale(1); }
-  }
-
-  h1 {
-    color: #064e3b;
-    text-align: center;
-    font-size: 2rem;
-    margin-bottom: 0.5rem;
-  }
-
-  p {
-    text-align: center;
-    margin-bottom: 1.5rem;
-    color: #065f46;
-  }
-
-  input {
-    width: 100%;
-    padding: 14px;
-    border: 3px solid #059669;
-    border-radius: 12px;
-    font-size: 16px;
-    outline: none;
-    margin-bottom: 10px;
-    transition: all 0.2s ease;
-  }
-  input:focus {
-    border-color: #047857;
-    box-shadow: 0 0 10px #6ee7b7;
-  }
-
-  button {
-    background: linear-gradient(90deg, #10b981, #34d399);
-    border: none;
-    color: white;
-    font-weight: 600;
-    padding: 14px 20px;
-    border-radius: 12px;
-    cursor: pointer;
-    width: 100%;
-    font-size: 1rem;
-    transition: all 0.2s ease;
-  }
-  button:hover {
-    background: linear-gradient(90deg, #059669, #10b981);
-    transform: translateY(-2px);
-  }
-
-  iframe {
-    width: 100%;
-    height: 315px;
-    border-radius: 12px;
-    border: 2px solid #6ee7b7;
-    margin-top: 15px;
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
-  }
-
-  .divider {
-    height: 3px;
-    background: linear-gradient(90deg, #10b981, #6ee7b7);
-    margin: 2rem 0;
-    border-radius: 3px;
-  }
-
-  .search-bar {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 1.5rem;
-  }
-
-  .search-bar input {
-    flex: 1;
-    border: 2px solid #10b981;
-    border-radius: 10px;
-    padding: 10px;
-    font-size: 15px;
-  }
-
-  .log-item {
-    background: rgba(255, 255, 255, 0.9);
-    border: 2px solid #a7f3d0;
-    border-radius: 12px;
-    padding: 10px;
-    margin-bottom: 15px;
-    color: #065f46;
-  }
-
-  .log-item a {
-    color: #047857;
-    font-weight: bold;
-    text-decoration: none;
-  }
-
-  .copy-btn {
-    background: #d1fae5;
-    color: #065f46;
-    padding: 6px 10px;
-    border-radius: 6px;
-    border: none;
-    margin-left: 8px;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-  .copy-btn:hover {
-    background: #10b981;
-    color: white;
-  }
-
-  @media (max-width: 600px) {
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Moletube</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
     body {
-      padding: 0.5rem;
-      align-items: flex-start; /* keeps card slightly lower on small screens */
+      margin: 0;
+      font-family: "Poppins", sans-serif;
+      background: linear-gradient(135deg, #022c22, #064e3b, #065f46);
+      color: #ecfdf5;
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
     }
-    .card {
-      padding: 1.2rem;
-      margin-top: 2rem;
+    /* Sidebar */
+    .sidebar {
+      width: 80px;
+      background-color: #064e3b;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 1rem 0;
+      box-shadow: 2px 0 8px rgba(0,0,0,0.4);
     }
-    iframe { height: 220px; }
-  }
-</style>
+    .sidebar button {
+      background: none;
+      border: none;
+      color: #a7f3d0;
+      margin: 1rem 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    .sidebar button:hover, .sidebar button.active {
+      color: #10b981;
+      transform: scale(1.1);
+    }
+    .sidebar svg {
+      width: 28px;
+      height: 28px;
+      margin-bottom: 0.3rem;
+    }
+
+    /* Main content */
+    .content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 2rem;
+      background: #022c22;
+    }
+    h1 {
+      color: #a7f3d0;
+      margin-bottom: 1rem;
+    }
+    .converter, .search, .shorts {
+      display: none;
+      animation: fadeIn 0.5s ease;
+    }
+    .active-tab {
+      display: block;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Shorts feed */
+    .shorts-feed {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1.5rem;
+    }
+    .shorts-feed iframe {
+      width: 320px;
+      height: 560px;
+      border: none;
+      border-radius: 12px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+    }
+  </style>
 </head>
 <body>
-  <div class="card">
-    <h1>Watch YouTube in School</h1>
-    <p>Paste a YouTube link below</p>
-
-    <input id="urlInput" placeholder="Paste YouTube link here">
-    <button id="convertBtn">Convert & Log</button>
-
-    <div id="result"></div>
-    <div class="divider"></div>
-
-    <h2>🔍 Search MoleTube/h2>
-    <div class="search-bar">
-      <input id="searchInput" placeholder="Type to search by title, channel, or URL...">
-    </div>
-
-    <div id="logList">Loading...</div>
+  <div class="sidebar">
+    <button id="btnConverter" class="active" title="Converter">
+      <i data-lucide="home"></i>
+      <span>Convert</span>
+    </button>
+    <button id="btnSearch" title="Search">
+      <i data-lucide="search"></i>
+      <span>Search</span>
+    </button>
+    <button id="btnShorts" title="Shorts">
+      <i data-lucide="film"></i>
+      <span>Shorts</span>
+    </button>
   </div>
 
-<script>
-let allLogs = [];
+  <div class="content">
+    <section id="converterTab" class="converter active-tab">
+      <h1>Convert YouTube Links</h1>
+      <input type="text" id="urlInput" placeholder="Paste YouTube URL here" style="width:60%;padding:10px;border-radius:8px;border:none;">
+      <button id="convertBtn" style="padding:10px 20px;border:none;border-radius:8px;background:#10b981;color:white;margin-left:10px;">Convert</button>
+      <div id="embedArea" style="margin-top:2rem;"></div>
+    </section>
 
-function renderLogs(logs) {
-  const logList = document.getElementById("logList");
-  logList.innerHTML = "";
-  if (!logs.length) {
-    logList.innerHTML = "<p>No videos logged yet.</p>";
-    return;
-  }
-  logs.slice().reverse().forEach(entry => {
-    const div = document.createElement("div");
-    div.className = "log-item";
-    div.innerHTML = `
-      <p><b>${entry.title}</b><br>
-      Channel: <i>${entry.channel}</i></p>
-      <a href="${entry.url}" target="_blank">${entry.url}</a>
-      <iframe src="${entry.url}" allowfullscreen></iframe>
-    `;
-    logList.appendChild(div);
-  });
-}
+    <section id="searchTab" class="search">
+      <h1>Search Videos</h1>
+      <input type="text" id="searchInput" placeholder="Search YouTube" style="width:60%;padding:10px;border-radius:8px;border:none;">
+      <button id="searchBtn" style="padding:10px 20px;border:none;border-radius:8px;background:#10b981;color:white;margin-left:10px;">Search</button>
+      <div id="results" style="margin-top:2rem;display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1rem;"></div>
+    </section>
 
-async function logUrl(url) {
-  const res = await fetch("/api/log", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ url })
-  });
-  return await res.json();
-}
+    <section id="shortsTab" class="shorts">
+      <h1>Shorts</h1>
+      <div class="shorts-feed" id="shortsFeed"></div>
+      <p id="loading" style="text-align:center;margin-top:1rem;display:none;">Loading more Shorts...</p>
+    </section>
+  </div>
 
-async function loadLogs() {
-  const res = await fetch("/api/list");
-  allLogs = await res.json();
-  renderLogs(allLogs);
-}
+  <script>
+    lucide.createIcons();
 
-document.getElementById("convertBtn").addEventListener("click", async () => {
-  const input = document.getElementById("urlInput").value.trim();
-  if (!input) return alert("Enter a YouTube URL");
+    const tabs = {
+      converter: document.getElementById('converterTab'),
+      search: document.getElementById('searchTab'),
+      shorts: document.getElementById('shortsTab')
+    };
+    const buttons = {
+      converter: document.getElementById('btnConverter'),
+      search: document.getElementById('btnSearch'),
+      shorts: document.getElementById('btnShorts')
+    };
 
-  const result = await logUrl(input);
+    function showTab(tab) {
+      for (const key in tabs) tabs[key].classList.remove('active-tab');
+      for (const key in buttons) buttons[key].classList.remove('active');
+      tabs[tab].classList.add('active-tab');
+      buttons[tab].classList.add('active');
+      if (tab === "shorts") loadShorts();
+    }
 
-  document.getElementById("result").innerHTML = `
-    <p><b>Converted URL:</b> 
-    <a href="${result.url}" target="_blank">${result.url}</a>
-    <button class="copy-btn" onclick="navigator.clipboard.writeText('${result.url}')">Copy</button></p>
-    <p><b>Video:</b> ${result.title}<br><b>Channel:</b> ${result.channel}</p>
-    <iframe src="${result.url}" allowfullscreen></iframe>
-  `;
+    buttons.converter.onclick = () => showTab('converter');
+    buttons.search.onclick = () => showTab('search');
+    buttons.shorts.onclick = () => showTab('shorts');
 
-  if (!result.duplicate) await loadLogs();
-});
+    // Simple converter preview
+    document.getElementById("convertBtn").onclick = async () => {
+      const url = document.getElementById("urlInput").value.trim();
+      if (!url) return;
+      const res = await fetch("/api/log", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url })
+      });
+      const data = await res.json();
+      if (data.url) {
+        document.getElementById("embedArea").innerHTML =
+          `<iframe width="560" height="315" src="${data.url}" allowfullscreen></iframe>`;
+      }
+    };
 
-document.getElementById("searchInput").addEventListener("input", e => {
-  const term = e.target.value.toLowerCase();
-  const filtered = allLogs.filter(l =>
-    l.url.toLowerCase().includes(term) ||
-    l.title.toLowerCase().includes(term) ||
-    l.channel.toLowerCase().includes(term)
-  );
-  renderLogs(filtered);
-});
+    // Shorts feed handler
+    let loading = false;
+    async function loadShorts() {
+      if (loading) return;
+      loading = true;
+      document.getElementById("loading").style.display = "block";
+      const res = await fetch("/api/shorts");
+      const shorts = await res.json();
+      const feed = document.getElementById("shortsFeed");
+      shorts.forEach(s => {
+        const iframe = document.createElement("iframe");
+        iframe.src = s.url;
+        iframe.allow = "autoplay; encrypted-media";
+        feed.appendChild(iframe);
+      });
+      document.getElementById("loading").style.display = "none";
+      loading = false;
+    }
 
-loadLogs();
-</script>
+    // Infinite scroll
+    document.querySelector(".content").addEventListener("scroll", () => {
+      const feed = document.querySelector(".content");
+      if (feed.scrollTop + feed.clientHeight >= feed.scrollHeight - 300) {
+        if (tabs.shorts.classList.contains("active-tab")) loadShorts();
+      }
+    });
+  </script>
 </body>
 </html>
