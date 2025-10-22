@@ -1,4 +1,5 @@
 import express from "express";
+import fetch from "node-fetch"; // ✅ needed for API calls
 
 const app = express();
 app.use(express.json());
@@ -71,34 +72,43 @@ app.post("/api/log", async (req, res) => {
   res.json(entry);
 });
 
-// shorts feed
+// Shorts
 app.get("/api/shorts", async (req, res) => {
-  const randomWords = ["funny", "music", "tech", "animals", "sports", "games"];
-  const query = randomWords[Math.floor(Math.random() * randomWords.length)];
-  const ytUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&videoDuration=short&maxResults=5&q=${query}&key=${YT_API_KEY}`;
-  const ytRes = await fetch(ytUrl);
-  const data = await ytRes.json();
+  let logs = await readLogs();
 
-  const logs = await readLogs();
-  const newShorts = [];
+  const nocookieShorts = logs.filter(v => v.url.includes("youtube-nocookie.com"));
 
-  for (const item of data.items || []) {
-    const id = item.id.videoId;
-    const noCookieUrl = `https://www.youtube-nocookie.com/embed/${id}`;
-    if (logs.find((v) => v.url === noCookieUrl)) continue;
+  if (nocookieShorts.length < 5) {
+    const randomWords = ["funny", "music", "tech", "animals", "sports", "games"];
+    const query = randomWords[Math.floor(Math.random() * randomWords.length)];
+    const ytUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&videoDuration=short&maxResults=5&q=${query}&key=${YT_API_KEY}`;
+    const ytRes = await fetch(ytUrl);
+    const data = await ytRes.json();
 
-    const entry = {
-      url: noCookieUrl,
-      title: item.snippet.title,
-      channel: item.snippet.channelTitle,
-      loggedAt: new Date().toISOString(),
-    };
-    newShorts.push(entry);
-    logs.push(entry);
+    for (const item of data.items || []) {
+      const id = item.id.videoId;
+      const noCookieUrl = `https://www.youtube-nocookie.com/embed/${id}`;
+      if (logs.find(v => v.url === noCookieUrl)) continue;
+
+      const entry = {
+        url: noCookieUrl,
+        title: item.snippet.title,
+        channel: item.snippet.channelTitle,
+        loggedAt: new Date().toISOString(),
+      };
+      logs.push(entry);
+    }
+
+    await saveLogs(logs);
   }
 
-  if (newShorts.length) await saveLogs(logs);
-  res.json(newShorts);
+  const updated = await readLogs();
+  const readyShorts = updated
+    .filter(v => v.url.includes("youtube-nocookie.com"))
+    .sort(() => 0.5 - Math.random())
+    .slice(0, 1);
+
+  res.json(readyShorts);
 });
 
 // Search API
