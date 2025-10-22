@@ -1,12 +1,12 @@
 {
-  "name": "yt-nocookie-embed",
+  "name": "youtube-nocookie-converter",
   "version": "1.0.0",
+  "type": "module",
   "main": "app.js",
   "scripts": {
     "start": "node app.js"
   },
   "dependencies": {
-    "express": "^4.19.0",
-    "cors": "^2.8.5"
+    "express": "^4.19.2"
   }
 }
