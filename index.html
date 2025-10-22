@@ -5,10 +5,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Moletube</title>
 <style>
-  /* Global style */
   body {
     font-family: "Poppins", sans-serif;
-    background: linear-gradient(135deg, #064e3b, #065f46, #047857);
+    background: linear-gradient(135deg, #022c22, #064e3b, #065f46);
     color: #ecfdf5;
     margin: 0;
     display: flex;
@@ -18,7 +17,6 @@
     padding: 2rem;
   }
 
-  /* Main card */
   .card {
     background: linear-gradient(180deg, #d1fae5, #a7f3d0);
     color: #065f46;
@@ -36,7 +34,6 @@
     to { opacity: 1; transform: scale(1); }
   }
 
-  /* Header */
   h1 {
     color: #064e3b;
     text-align: center;
@@ -50,7 +47,6 @@
     color: #065f46;
   }
 
-  /* Input and button */
   input {
     width: 100%;
     padding: 14px;
@@ -83,7 +79,6 @@
     transform: translateY(-2px);
   }
 
-  /* Embed styling */
   iframe {
     width: 100%;
     height: 315px;
@@ -93,7 +88,6 @@
     box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
   }
 
-  /* Divider */
   .divider {
     height: 3px;
     background: linear-gradient(90deg, #10b981, #6ee7b7);
@@ -101,7 +95,20 @@
     border-radius: 3px;
   }
 
-  /* Logs */
+  .search-bar {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 1.5rem;
+  }
+
+  .search-bar input {
+    flex: 1;
+    border: 2px solid #10b981;
+    border-radius: 10px;
+    padding: 10px;
+    font-size: 15px;
+  }
+
   .log-item {
     background: rgba(255, 255, 255, 0.9);
     border: 2px solid #a7f3d0;
@@ -110,13 +117,13 @@
     margin-bottom: 15px;
     color: #065f46;
   }
+
   .log-item a {
     color: #047857;
     font-weight: bold;
     text-decoration: none;
   }
 
-  /* Copy button */
   .copy-btn {
     background: #d1fae5;
     color: #065f46;
@@ -141,63 +148,87 @@
   <div class="card">
     <h1>Watch youtube in school</h1>
     <p>Paste a YouTube link below</p>
-    <input id="urlInput" placeholder="https://www.youtube.com/watch?v=dQw4w9WgXcQ">
+
+    <input id="urlInput" placeholder="Paste YouTube link here">
     <button id="convertBtn">Convert & Log</button>
+
     <div id="result"></div>
     <div class="divider"></div>
-    <h2>Shared Videos</h2>
+
+    <h2>🔍 Search Shared Videos</h2>
+    <div class="search-bar">
+      <input id="searchInput" placeholder="Type to search by title, channel, or URL...">
+    </div>
+
     <div id="logList">Loading...</div>
   </div>
 
 <script>
-function extractYouTubeId(url) {
-  try {
-    const parsed = new URL(url);
-    if (parsed.hostname.includes("youtu.be")) return parsed.pathname.slice(1);
-    if (parsed.searchParams.get("v")) return parsed.searchParams.get("v");
-    const match = parsed.pathname.match(/\/(embed|shorts)\/([^/?]+)/);
-    return match ? match[2] : null;
-  } catch { return null; }
-}
-function makeNoCookieUrl(id) {
-  return `https://www.youtube-nocookie.com/embed/${id}`;
-}
-async function logUrl(url) {
-  await fetch("/api/log", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ url })
-  });
-}
-async function loadLogs() {
-  const res = await fetch("/api/list");
-  const data = await res.json();
+let allLogs = [];
+
+function renderLogs(logs) {
   const logList = document.getElementById("logList");
   logList.innerHTML = "";
-  data.reverse().forEach(entry => {
+  if (!logs.length) {
+    logList.innerHTML = "<p>No videos logged yet.</p>";
+    return;
+  }
+  logs.slice().reverse().forEach(entry => {
     const div = document.createElement("div");
     div.className = "log-item";
     div.innerHTML = `
+      <p><b>${entry.title}</b><br>
+      Channel: <i>${entry.channel}</i></p>
       <a href="${entry.url}" target="_blank">${entry.url}</a>
       <iframe src="${entry.url}" allowfullscreen></iframe>
     `;
     logList.appendChild(div);
   });
 }
+
+async function logUrl(url) {
+  const res = await fetch("/api/log", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ url })
+  });
+  return await res.json();
+}
+
+async function loadLogs() {
+  const res = await fetch("/api/list");
+  allLogs = await res.json();
+  renderLogs(allLogs);
+}
+
 document.getElementById("convertBtn").addEventListener("click", async () => {
   const input = document.getElementById("urlInput").value.trim();
   if (!input) return alert("Enter a YouTube URL");
-  const id = extractYouTubeId(input);
-  if (!id) return alert("Invalid YouTube URL");
-  const noCookie = makeNoCookieUrl(id);
+
+  const result = await logUrl(input);
+
   document.getElementById("result").innerHTML = `
-    <p><b>Converted URL:</b> <a href="${noCookie}" target="_blank">${noCookie}</a>
-    <button class="copy-btn" onclick="navigator.clipboard.writeText('${noCookie}')">Copy</button></p>
-    <iframe src="${noCookie}" allowfullscreen></iframe>
+    <p><b>Converted URL:</b> 
+    <a href="${result.url}" target="_blank">${result.url}</a>
+    <button class="copy-btn" onclick="navigator.clipboard.writeText('${result.url}')">Copy</button></p>
+    <p><b>Video:</b> ${result.title}<br><b>Channel:</b> ${result.channel}</p>
+    <iframe src="${result.url}" allowfullscreen></iframe>
   `;
-  await logUrl(noCookie);
-  await loadLogs();
+
+  // Only reload logs if new
+  if (!result.duplicate) await loadLogs();
 });
+
+document.getElementById("searchInput").addEventListener("input", e => {
+  const term = e.target.value.toLowerCase();
+  const filtered = allLogs.filter(l =>
+    l.url.toLowerCase().includes(term) ||
+    l.title.toLowerCase().includes(term) ||
+    l.channel.toLowerCase().includes(term)
+  );
+  renderLogs(filtered);
+});
+
 loadLogs();
 </script>
 </body>
