@@ -14,8 +14,6 @@
     height: 100vh;
     overflow: hidden;
   }
-
-  /* Sidebar */
   #sidebar {
     width: 80px;
     background: #012e25;
@@ -25,7 +23,6 @@
     padding-top: 20px;
     gap: 20px;
   }
-
   .tab {
     cursor: pointer;
     color: #a7f3d0;
@@ -33,46 +30,36 @@
     transition: 0.3s;
     font-size: 24px;
   }
-  .tab:hover {
-    color: #34d399;
-  }
-
-  /* Main content */
+  .tab:hover { color: #34d399; }
   #main-content {
     flex: 1;
     overflow-y: auto;
     padding: 20px;
     position: relative;
   }
-
-  h1 {
-    color: #6ee7b7;
-  }
-
+  h1 { color: #6ee7b7; }
   .video-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
     gap: 16px;
     margin-top: 80px;
   }
-
   .video-card {
     background: #064e3b;
     border-radius: 12px;
     padding: 8px;
     box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+    cursor: pointer;
+    transition: transform .2s;
   }
-
+  .video-card:hover { transform: scale(1.03); }
   iframe {
     width: 100%;
     height: 200px;
     border-radius: 8px;
     border: none;
   }
-
   .video-info { padding: 6px; }
-
-  /* Sticky search bar */
   #search-bar {
     position: sticky;
     top: 0;
@@ -85,7 +72,6 @@
     z-index: 10;
     box-shadow: 0 2px 10px rgba(0,0,0,0.4);
   }
-
   #search-input {
     flex: 1;
     padding: 8px;
@@ -93,7 +79,6 @@
     border: none;
     font-size: 14px;
   }
-
   button {
     background: #059669;
     color: #ecfdf5;
@@ -103,67 +88,7 @@
     cursor: pointer;
     font-weight: bold;
   }
-
-  button:hover {
-    background: #10b981;
-  }
-
-  /* Shorts scroll view */
-  #shorts-feed {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    height: 100%;
-    overflow-y: scroll;
-    scroll-snap-type: y mandatory;
-    padding: 0;
-    margin: 0;
-  }
-
-  .short {
-    width: 320px;
-    height: 560px;
-    background: #052e22;
-    border-radius: 16px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    box-shadow: 0 0 10px rgba(0,0,0,0.4);
-    overflow: hidden;
-    scroll-snap-align: start;
-    margin: 20px 0;
-    position: relative;
-  }
-
-  .short iframe {
-    width: 100%;
-    height: 100%;
-    border: none;
-  }
-
-  /* Overlay for unmute */
-  #unmute-overlay {
-    position: fixed;
-    top: 0;
-    left: 80px;
-    width: calc(100% - 80px);
-    height: 100%;
-    background: rgba(0, 0, 0, 0.6);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #ecfdf5;
-    font-size: 24px;
-    z-index: 1000;
-    backdrop-filter: blur(4px);
-    cursor: pointer;
-    transition: opacity 0.4s ease;
-  }
-
-  #unmute-overlay.hidden {
-    opacity: 0;
-    pointer-events: none;
-  }
+  button:hover { background: #10b981; }
 </style>
 </head>
 <body>
@@ -204,16 +129,23 @@ async function loadHome() {
     return;
   }
 
-  const grid = logs.reverse().map(v => `
-    <div class="video-card">
-      <iframe src="${v.url}" allowfullscreen></iframe>
-      <div class="video-info">
-        <div>${v.title}</div>
-        <div>${v.channel}</div>
-      </div>
-    </div>
-  `).join("");
+  const grid = logs.reverse().map(v => {
+    const id = v.url.split("/embed/")[1];
+    return `
+      <div class="video-card" onclick="openVideo('${id}', '${v.title}', '${v.channel}')">
+        <iframe src="${v.url}" allowfullscreen></iframe>
+        <div class="video-info">
+          <div>${v.title}</div>
+          <div>${v.channel}</div>
+        </div>
+      </div>`;
+  }).join("");
   mainContent.innerHTML += `<div class="video-grid" id="results">${grid}</div>`;
+}
+
+function openVideo(id, title, channel) {
+  localStorage.setItem("videoData", JSON.stringify({ id, title, channel }));
+  window.location.href = "watch.html?id=" + id;
 }
 
 async function performSearch() {
@@ -226,7 +158,7 @@ async function performSearch() {
   const grid = results.map(item => {
     const id = item.id.videoId;
     return `
-      <div class="video-card">
+      <div class="video-card" onclick="openVideo('${id}', '${item.snippet.title}', '${item.snippet.channelTitle}')">
         <iframe src="https://www.youtube-nocookie.com/embed/${id}" allowfullscreen></iframe>
         <div class="video-info">
           <div>${item.snippet.title}</div>
@@ -235,104 +167,6 @@ async function performSearch() {
       </div>`;
   }).join("");
   document.getElementById("results").innerHTML = grid;
-}
-
-// === Shorts with click-to-unmute ===
-async function loadShorts() {
-  mainContent.innerHTML = `<div id="shorts-feed"><p>Loading Shorts...</p></div>`;
-  const res = await fetch("/api/shorts");
-  const shorts = await res.json();
-
-  if (!shorts.length) {
-    mainContent.innerHTML = `<div id="shorts-feed"><p>No Shorts found.</p></div>`;
-    return;
-  }
-
-  const feed = document.createElement("div");
-  feed.id = "shorts-feed";
-
-  shorts.forEach(s => {
-    const shortEl = document.createElement("div");
-    shortEl.className = "short";
-    shortEl.innerHTML = `
-      <iframe 
-        src="${s.url}?enablejsapi=1&mute=1&autoplay=1&controls=0" 
-        allow="autoplay; encrypted-media" 
-        allowfullscreen></iframe>`;
-    feed.appendChild(shortEl);
-  });
-
-  mainContent.innerHTML = "";
-  mainContent.appendChild(feed);
-
-  let players = [];
-  let soundEnabled = false;
-
-  function onYouTubeIframeAPIReady() {
-    const iframes = feed.querySelectorAll("iframe");
-    iframes.forEach((frame, i) => {
-      const player = new YT.Player(frame, {
-        events: { onReady: () => { if (i === 0) player.playVideo(); } }
-      });
-      players.push(player);
-    });
-  }
-
-  if (typeof YT === "undefined" || typeof YT.Player === "undefined") {
-    const tag = document.createElement("script");
-    tag.src = "https://www.youtube.com/iframe_api";
-    document.body.appendChild(tag);
-    window.onYouTubeIframeAPIReady = onYouTubeIframeAPIReady;
-  } else {
-    onYouTubeIframeAPIReady();
-  }
-
-  // Scroll to play visible shorts
-  feed.addEventListener("scroll", () => {
-    const shortsEls = feed.querySelectorAll(".short");
-    shortsEls.forEach((el, i) => {
-      const rect = el.getBoundingClientRect();
-      const visible = rect.top >= 0 && rect.bottom <= window.innerHeight;
-      if (players[i]) {
-        if (visible) players[i].playVideo();
-        else players[i].pauseVideo();
-      }
-    });
-  });
-
-  // Unmute overlay
-  const overlay = document.createElement("div");
-  overlay.id = "unmute-overlay";
-  overlay.textContent = "🔊 Click to unmute";
-  document.body.appendChild(overlay);
-
-  overlay.addEventListener("click", () => {
-    if (!soundEnabled) {
-      soundEnabled = true;
-      overlay.classList.add("hidden");
-      players.forEach(p => {
-        try { p.unMute(); } catch {}
-      });
-    }
-  });
-
-  // Infinite scroll for more Shorts
-  feed.addEventListener("scroll", async () => {
-    if (feed.scrollTop + feed.clientHeight >= feed.scrollHeight - 100) {
-      const next = await fetch("/api/shorts");
-      const newShorts = await next.json();
-      newShorts.forEach(s => {
-        const shortEl = document.createElement("div");
-        shortEl.className = "short";
-        shortEl.innerHTML = `
-          <iframe 
-            src="${s.url}?enablejsapi=1&mute=${soundEnabled ? 0 : 1}&autoplay=1&controls=0" 
-            allow="autoplay; encrypted-media" 
-            allowfullscreen></iframe>`;
-        feed.appendChild(shortEl);
-      });
-    }
-  });
 }
 
 function loadSearch() {
@@ -344,6 +178,10 @@ function loadSearch() {
     </div>
     <div id="results" class="video-grid"></div>
   `;
+}
+
+async function loadShorts() {
+  window.location.href = "shorts.html";
 }
 </script>
 </body>
