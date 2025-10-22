@@ -12,9 +12,9 @@
     margin: 0;
     display: flex;
     justify-content: center;
-    align-items: flex-start;
+    align-items: center; /* centered vertically */
     min-height: 100vh;
-    padding: 2rem;
+    padding: 1rem;
   }
 
   .card {
@@ -140,13 +140,21 @@
   }
 
   @media (max-width: 600px) {
+    body {
+      padding: 0.5rem;
+      align-items: flex-start; /* keeps card slightly lower on small screens */
+    }
+    .card {
+      padding: 1.2rem;
+      margin-top: 2rem;
+    }
     iframe { height: 220px; }
   }
 </style>
 </head>
 <body>
   <div class="card">
-    <h1>Watch youtube in school</h1>
+    <h1>Watch YouTube in School</h1>
     <p>Paste a YouTube link below</p>
 
     <input id="urlInput" placeholder="Paste YouTube link here">
@@ -155,7 +163,7 @@
     <div id="result"></div>
     <div class="divider"></div>
 
-    <h2>🔍 Search Shared Videos</h2>
+    <h2>🔍 Search MoleTube/h2>
     <div class="search-bar">
       <input id="searchInput" placeholder="Type to search by title, channel, or URL...">
     </div>
@@ -215,7 +223,6 @@ document.getElementById("convertBtn").addEventListener("click", async () => {
     <iframe src="${result.url}" allowfullscreen></iframe>
   `;
 
-  // Only reload logs if new
   if (!result.duplicate) await loadLogs();
 });
 
