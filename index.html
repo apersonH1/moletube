@@ -1,97 +1,27 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Moletube</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css" />
+  <link rel="icon" href="favicon.png" />
 </head>
 <body>
-  <div id="sidebar">
-    <div class="tab" onclick="loadHome()">🏠</div>
-    <div class="tab" onclick="loadShorts()">🎬</div>
-  </div>
+  <aside class="sidebar">
+    <a href="index.html" class="active">🏠</a>
+    <a href="shorts.html">🎞</a>
+  </aside>
 
-  <div id="main-content">
-    <h1>Loading Moletube...</h1>
-  </div>
+  <header class="header">
+    <h1>🎬 Moletube</h1>
+    <input id="searchBar" type="text" placeholder="Search YouTube..." />
+  </header>
 
-  <script>
-  const mainContent = document.getElementById("main-content");
+  <main id="videoGrid" class="video-grid">
+    <p>Loading videos...</p>
+  </main>
 
-  // Load Home with Search Bar
-  async function loadHome() {
-    mainContent.innerHTML = `
-      <div id="search-bar">
-        <input id="search-input" placeholder="Search videos or channels...">
-        <button onclick="performSearch()">🔍</button>
-      </div>
-      <h1>Moletube Home</h1>
-      <p>Loading videos...</p>
-    `;
-
-    await fetch("/api/fetch-random");
-
-    const res = await fetch("https://api.jsonbin.io/v3/b/68f851a4ae596e708f23119e/latest", {
-      headers: { "X-Master-Key": "$2a$10$ivvZBRxRHoqZjHMO5OM2oeCpbPhOrq7bzmxdzR.9eB9OoRcPi9UZi" }
-    });
-    const data = await res.json();
-    const logs = Array.isArray(data.record) ? data.record : data.record.data || [];
-
-    if (!logs.length) {
-      mainContent.innerHTML += "<p>No videos yet.</p>";
-      return;
-    }
-
-    const grid = logs.reverse().map(v => {
-      const id = v.url.split("/embed/")[1];
-      return `
-        <div class="video-card" onclick="openVideo('${id}', '${v.title}', '${v.channel}')">
-          <iframe src="${v.url}" allowfullscreen></iframe>
-          <div class="video-info">
-            <div>${v.title}</div>
-            <div>${v.channel}</div>
-          </div>
-        </div>`;
-    }).join("");
-    mainContent.innerHTML += `<div class="video-grid" id="results">${grid}</div>`;
-  }
-
-  // Search directly on Home
-  async function performSearch() {
-    const q = document.getElementById("search-input").value;
-    if (!q.trim()) return loadHome();
-    const res = await fetch("/api/search?q=" + encodeURIComponent(q));
-    const data = await res.json();
-    const results = data.items || [];
-
-    const grid = results.map(item => {
-      const id = item.id.videoId;
-      return `
-        <div class="video-card" onclick="openVideo('${id}', '${item.snippet.title}', '${item.snippet.channelTitle}')">
-          <iframe src="https://www.youtube-nocookie.com/embed/${id}" allowfullscreen></iframe>
-          <div class="video-info">
-            <div>${item.snippet.title}</div>
-            <div>${item.snippet.channelTitle}</div>
-          </div>
-        </div>`;
-    }).join("");
-    document.getElementById("results").innerHTML = grid;
-  }
-
-  // Shorts tab
-  function loadShorts() {
-    window.location.href = "shorts.html";
-  }
-
-  // Open video viewer
-  function openVideo(id, title, channel) {
-    localStorage.setItem("videoData", JSON.stringify({ id, title, channel }));
-    window.location.href = "watch.html?id=" + id;
-  }
-
-  // Load homepage on start
-  window.addEventListener("load", loadHome);
-  </script>
+  <script src="script.js" defer></script>
 </body>
 </html>
