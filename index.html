@@ -4,193 +4,240 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Moletube</title>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
-  <script src="https://unpkg.com/lucide@latest"></script>
   <style>
     body {
       margin: 0;
       font-family: "Poppins", sans-serif;
-      background: linear-gradient(135deg, #022c22, #064e3b, #065f46);
+      background: linear-gradient(135deg, #011b13, #033324);
       color: #ecfdf5;
       display: flex;
       height: 100vh;
       overflow: hidden;
     }
-    /* Sidebar */
+
     .sidebar {
       width: 80px;
-      background-color: #064e3b;
+      background: #022c22;
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 1rem 0;
-      box-shadow: 2px 0 8px rgba(0,0,0,0.4);
+      padding-top: 20px;
+      gap: 20px;
+      box-shadow: 2px 0 5px rgba(0, 0, 0, 0.4);
     }
-    .sidebar button {
+
+    .tab {
       background: none;
       border: none;
-      color: #a7f3d0;
-      margin: 1rem 0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      font-size: 0.8rem;
+      color: #d1fae5;
       cursor: pointer;
-      transition: all 0.3s ease;
+      font-size: 16px;
+      transition: 0.3s;
     }
-    .sidebar button:hover, .sidebar button.active {
-      color: #10b981;
+
+    .tab:hover {
+      color: #34d399;
       transform: scale(1.1);
     }
-    .sidebar svg {
-      width: 28px;
-      height: 28px;
-      margin-bottom: 0.3rem;
-    }
 
-    /* Main content */
-    .content {
+    .main {
       flex: 1;
-      overflow-y: auto;
-      padding: 2rem;
-      background: #022c22;
-    }
-    h1 {
-      color: #a7f3d0;
-      margin-bottom: 1rem;
-    }
-    .converter, .search, .shorts {
-      display: none;
-      animation: fadeIn 0.5s ease;
-    }
-    .active-tab {
-      display: block;
-    }
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: relative;
     }
 
-    /* Shorts feed */
-    .shorts-feed {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 1.5rem;
+    .tab-content {
+      display: none;
+      width: 100%;
+      height: 100%;
     }
-    .shorts-feed iframe {
-      width: 320px;
-      height: 560px;
+
+    /* Shorts Styles */
+    .shorts-container {
+      height: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: #011b13;
+    }
+
+    .shorts-player {
+      width: 100%;
+      max-width: 420px;
+      aspect-ratio: 9 / 16;
+      border-radius: 16px;
+      overflow: hidden;
+      background: #000;
+      position: relative;
+      box-shadow: 0 0 20px #0f5132;
+    }
+
+    .short-video iframe {
+      width: 100%;
+      height: 100%;
       border: none;
-      border-radius: 12px;
-      box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+    }
+
+    .converter-container, .search-container {
+      text-align: center;
+      margin-top: 100px;
+    }
+
+    input {
+      padding: 10px;
+      border-radius: 8px;
+      border: none;
+      width: 60%;
+      margin-bottom: 20px;
+      background: #064e3b;
+      color: white;
+    }
+
+    button.action {
+      background: #10b981;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      cursor: pointer;
+      color: #011b13;
+      font-weight: bold;
+      transition: 0.3s;
+    }
+
+    button.action:hover {
+      background: #34d399;
     }
   </style>
 </head>
 <body>
   <div class="sidebar">
-    <button id="btnConverter" class="active" title="Converter">
-      <i data-lucide="home"></i>
-      <span>Convert</span>
-    </button>
-    <button id="btnSearch" title="Search">
-      <i data-lucide="search"></i>
-      <span>Search</span>
-    </button>
-    <button id="btnShorts" title="Shorts">
-      <i data-lucide="film"></i>
-      <span>Shorts</span>
-    </button>
+    <button class="tab" onclick="showTab('converter')">Convert</button>
+    <button class="tab" onclick="showTab('search')">Search</button>
+    <button class="tab" onclick="showTab('shorts')">Shorts</button>
   </div>
 
-  <div class="content">
-    <section id="converterTab" class="converter active-tab">
-      <h1>Convert YouTube Links</h1>
-      <input type="text" id="urlInput" placeholder="Paste YouTube URL here" style="width:60%;padding:10px;border-radius:8px;border:none;">
-      <button id="convertBtn" style="padding:10px 20px;border:none;border-radius:8px;background:#10b981;color:white;margin-left:10px;">Convert</button>
-      <div id="embedArea" style="margin-top:2rem;"></div>
-    </section>
+  <div class="main">
+    <!-- Converter -->
+    <div id="converterTab" class="tab-content">
+      <div class="converter-container">
+        <h2>MoleTube YouTube Unbloxer</h2>
+        <input id="urlInput" type="text" placeholder="Enter YouTube URL" />
+        <br />
+        <button class="action" onclick="convertUrl()">Convert</button>
+        <div id="result"></div>
+      </div>
+    </div>
 
-    <section id="searchTab" class="search">
-      <h1>Search Videos</h1>
-      <input type="text" id="searchInput" placeholder="Search YouTube" style="width:60%;padding:10px;border-radius:8px;border:none;">
-      <button id="searchBtn" style="padding:10px 20px;border:none;border-radius:8px;background:#10b981;color:white;margin-left:10px;">Search</button>
-      <div id="results" style="margin-top:2rem;display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1rem;"></div>
-    </section>
+    <!-- Search -->
+    <div id="searchTab" class="tab-content">
+      <div class="search-container">
+        <h2>Search MoleTube</h2>
+        <input id="searchInput" type="text" placeholder="Search videos..." />
+        <br />
+        <button class="action" onclick="searchVideos()">Search</button>
+        <div id="searchResults"></div>
+      </div>
+    </div>
 
-    <section id="shortsTab" class="shorts">
-      <h1>Shorts</h1>
-      <div class="shorts-feed" id="shortsFeed"></div>
-      <p id="loading" style="text-align:center;margin-top:1rem;display:none;">Loading more Shorts...</p>
-    </section>
+    <!-- Shorts -->
+    <div id="shortsTab" class="tab-content">
+      <div class="shorts-container">
+        <div class="shorts-player">
+          <div class="short-video" id="shortFrame"></div>
+        </div>
+      </div>
+    </div>
   </div>
 
   <script>
-    lucide.createIcons();
+    let currentShort = null;
+    let loadingNext = false;
 
-    const tabs = {
-      converter: document.getElementById('converterTab'),
-      search: document.getElementById('searchTab'),
-      shorts: document.getElementById('shortsTab')
-    };
-    const buttons = {
-      converter: document.getElementById('btnConverter'),
-      search: document.getElementById('btnSearch'),
-      shorts: document.getElementById('btnShorts')
-    };
-
-    function showTab(tab) {
-      for (const key in tabs) tabs[key].classList.remove('active-tab');
-      for (const key in buttons) buttons[key].classList.remove('active');
-      tabs[tab].classList.add('active-tab');
-      buttons[tab].classList.add('active');
-      if (tab === "shorts") loadShorts();
-    }
-
-    buttons.converter.onclick = () => showTab('converter');
-    buttons.search.onclick = () => showTab('search');
-    buttons.shorts.onclick = () => showTab('shorts');
-
-    // Simple converter preview
-    document.getElementById("convertBtn").onclick = async () => {
+    async function convertUrl() {
       const url = document.getElementById("urlInput").value.trim();
-      if (!url) return;
+      if (!url) return alert("Enter a YouTube URL first!");
       const res = await fetch("/api/log", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ url })
       });
       const data = await res.json();
-      if (data.url) {
-        document.getElementById("embedArea").innerHTML =
-          `<iframe width="560" height="315" src="${data.url}" allowfullscreen></iframe>`;
-      }
-    };
-
-    // Shorts feed handler
-    let loading = false;
-    async function loadShorts() {
-      if (loading) return;
-      loading = true;
-      document.getElementById("loading").style.display = "block";
-      const res = await fetch("/api/shorts");
-      const shorts = await res.json();
-      const feed = document.getElementById("shortsFeed");
-      shorts.forEach(s => {
-        const iframe = document.createElement("iframe");
-        iframe.src = s.url;
-        iframe.allow = "autoplay; encrypted-media";
-        feed.appendChild(iframe);
-      });
-      document.getElementById("loading").style.display = "none";
-      loading = false;
+      document.getElementById("result").innerHTML = `
+        <p>Converted:</p>
+        <iframe width="420" height="236" src="${data.url}" frameborder="0" allowfullscreen></iframe>
+      `;
     }
 
-    // Infinite scroll
-    document.querySelector(".content").addEventListener("scroll", () => {
-      const feed = document.querySelector(".content");
-      if (feed.scrollTop + feed.clientHeight >= feed.scrollHeight - 300) {
-        if (tabs.shorts.classList.contains("active-tab")) loadShorts();
+    async function searchVideos() {
+      const query = document.getElementById("searchInput").value.trim();
+      if (!query) return alert("Enter a search term!");
+      const res = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
+      const data = await res.json();
+      const results = data.items
+        .map(
+          (v) => `
+          <div>
+            <h4>${v.snippet.title}</h4>
+            <iframe width="320" height="180" src="https://www.youtube-nocookie.com/embed/${v.id.videoId}" frameborder="0"></iframe>
+          </div>
+        `
+        )
+        .join("");
+      document.getElementById("searchResults").innerHTML = results;
+    }
+
+    async function loadNextShort() {
+      if (loadingNext) return;
+      loadingNext = true;
+
+      try {
+        const res = await fetch("/api/shorts");
+        const shorts = await res.json();
+        if (!shorts.length) return;
+
+        const short = shorts[Math.floor(Math.random() * shorts.length)];
+        const frame = document.getElementById("shortFrame");
+        frame.innerHTML = `<iframe 
+          src="${short.url}?enablejsapi=1&autoplay=1&mute=0"
+          allow="autoplay; encrypted-media"
+          frameborder="0"
+          allowfullscreen>
+        </iframe>`;
+        currentShort = short;
+      } catch (err) {
+        console.error("Error loading short:", err);
+      } finally {
+        loadingNext = false;
+      }
+    }
+
+    function showTab(tabName) {
+      document.querySelectorAll(".tab-content").forEach(t => t.style.display = "none");
+      document.getElementById(tabName + "Tab").style.display = "block";
+
+      if (tabName === "shorts") {
+        document.body.style.overflow = "hidden";
+        loadNextShort();
+      } else {
+        document.body.style.overflow = "auto";
+      }
+    }
+
+    // Swipe or scroll to next short
+    let startY = 0;
+    document.addEventListener("touchstart", e => startY = e.touches[0].clientY);
+    document.addEventListener("touchend", e => {
+      const endY = e.changedTouches[0].clientY;
+      if (startY - endY > 50 && document.getElementById("shortsTab").style.display === "block") {
+        loadNextShort();
+      }
+    });
+
+    document.addEventListener("wheel", e => {
+      if (e.deltaY > 50 && document.getElementById("shortsTab").style.display === "block") {
+        loadNextShort();
       }
     });
   </script>
