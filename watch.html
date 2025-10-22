@@ -1,195 +1,25 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Moletube Watch</title>
-<style>
-  body {
-    font-family: "Poppins", sans-serif;
-    background: linear-gradient(135deg, #012519, #024b36, #02654a);
-    color: #ecfdf5;
-    margin: 0;
-    display: flex;
-  }
-
-  /* Sidebar */
-  #sidebar {
-    width: 220px;
-    background: rgba(0, 0, 0, 0.3);
-    height: 100vh;
-    display: flex;
-    flex-direction: column;
-    padding: 20px 10px;
-    box-sizing: border-box;
-    position: sticky;
-    top: 0;
-  }
-
-  #sidebar h2 {
-    color: #6ee7b7;
-    font-size: 20px;
-    margin: 0 0 20px;
-    text-align: center;
-  }
-
-  .side-link {
-    color: #ecfdf5;
-    text-decoration: none;
-    font-size: 16px;
-    padding: 10px 14px;
-    border-radius: 8px;
-    margin: 4px 0;
-    transition: background 0.25s;
-  }
-
-  .side-link:hover {
-    background: #064e3b;
-  }
-
-  /* Main viewer area */
-  main {
-    flex: 1;
-    padding: 20px;
-    overflow-y: auto;
-  }
-
-  #player {
-    width: 100%;
-    max-width: 960px;
-    aspect-ratio: 16 / 9;
-    border: none;
-    border-radius: 12px;
-    display: block;
-    margin: 0 auto;
-  }
-
-  .video-info {
-    max-width: 960px;
-    margin: 20px auto;
-  }
-
-  .video-title {
-    font-size: 22px;
-    font-weight: 600;
-    margin-bottom: 6px;
-  }
-
-  .channel-name {
-    color: #a7f3d0;
-    font-size: 16px;
-  }
-
-  #related {
-    margin-top: 40px;
-    max-width: 960px;
-    margin-left: auto;
-    margin-right: auto;
-  }
-
-  #related h3 {
-    font-size: 18px;
-    color: #6ee7b7;
-    margin-bottom: 12px;
-  }
-
-  .related-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-    gap: 14px;
-  }
-
-  .related-card {
-    background: #022c22;
-    border-radius: 10px;
-    overflow: hidden;
-    cursor: pointer;
-    transition: transform 0.25s ease;
-  }
-
-  .related-card:hover {
-    transform: translateY(-3px);
-  }
-
-  .related-thumb {
-    width: 100%;
-    height: 120px;
-    object-fit: cover;
-  }
-
-  .related-title {
-    padding: 8px 10px;
-    font-size: 14px;
-  }
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Watch - Moletube</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+  <aside class="sidebar">
+    <a href="index.html">🏠</a>
+    <a href="shorts.html">🎞</a>
+  </aside>
 
-  <!-- Sidebar -->
-  <nav id="sidebar">
-    <h2>Moletube</h2>
-    <a class="side-link" href="index.html">🏠 Home</a>
-    <a class="side-link" href="shorts.html">🎬 Shorts</a>
-  </nav>
-
-  <!-- Main Video Viewer -->
-  <main>
-    <iframe id="player" src="" allowfullscreen></iframe>
-
-    <div class="video-info">
-      <div class="video-title" id="title">Loading...</div>
-      <div class="channel-name" id="channel">...</div>
+  <main class="watch-page">
+    <div class="video-player">
+      <iframe id="watchFrame" src="" frameborder="0" allowfullscreen></iframe>
     </div>
-
-    <section id="related">
-      <h3>Related Videos</h3>
-      <div class="related-grid" id="relatedGrid"></div>
-    </section>
+    <h2 id="videoTitle"></h2>
+    <p id="videoChannel"></p>
   </main>
 
-<script>
-const params = new URLSearchParams(window.location.search);
-const id = params.get("id");
-const title = params.get("title");
-const channel = params.get("channel");
-const player = document.getElementById("player");
-
-if (id) {
-  player.src = `https://www.youtube-nocookie.com/embed/${id}`;
-  document.getElementById("title").textContent = title || "Unknown Video";
-  document.getElementById("channel").textContent = channel || "Unknown Channel";
-  fetchRelated(id);
-}
-
-// Fetch related videos
-async function fetchRelated(videoId) {
-  const res = await fetch(`/api/search?q=related+${encodeURIComponent(videoId)}`);
-  const data = await res.json();
-  const grid = document.getElementById("relatedGrid");
-  grid.innerHTML = "";
-
-  for (const item of data.items || []) {
-    const id = item.id?.videoId;
-    const thumb = item.snippet?.thumbnails?.medium?.url;
-    const title = item.snippet?.title;
-    const channel = item.snippet?.channelTitle;
-
-    const card = document.createElement("div");
-    card.className = "related-card";
-    card.onclick = () => openVideo(id, title, channel);
-    card.innerHTML = `
-      <img src="${thumb}" class="related-thumb" alt="${title}">
-      <div class="related-title">${title}</div>
-    `;
-    grid.appendChild(card);
-  }
-}
-
-function openVideo(id, title, channel) {
-  const params = new URLSearchParams({ id, title, channel });
-  window.location.href = `watch.html?${params.toString()}`;
-}
-</script>
-
+  <script src="watch.js" defer></script>
 </body>
 </html>
