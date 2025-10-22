@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Moletube Shorts</title>
+<style>
+  body {
+    font-family: "Poppins", sans-serif;
+    background: #001f16;
+    color: #ecfdf5;
+    margin: 0;
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+  }
+  #sidebar {
+    width: 80px;
+    background: #012e25;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-top: 20px;
+    gap: 20px;
+  }
+  .tab {
+    cursor: pointer;
+    color: #a7f3d0;
+    text-align: center;
+    transition: 0.3s;
+    font-size: 24px;
+  }
+  .tab:hover { color: #34d399; }
+
+  #shorts-container {
+    flex: 1;
+    overflow-y: scroll;
+    scroll-snap-type: y mandatory;
+    height: 100vh;
+  }
+  .short {
+    scroll-snap-align: start;
+    position: relative;
+    width: 100%;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: #022c22;
+  }
+  iframe {
+    width: 360px;
+    height: 640px;
+    border: none;
+    border-radius: 16px;
+  }
+  .overlay {
+    position: absolute;
+    bottom: 20%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0,0,0,0.7);
+    color: white;
+    padding: 12px 20px;
+    border-radius: 30px;
+    font-size: 18px;
+    cursor: pointer;
+    opacity: 1;
+    transition: opacity 0.3s ease;
+  }
+  .overlay.hidden {
+    opacity: 0;
+    pointer-events: none;
+  }
+</style>
+</head>
+<body>
+  <div id="sidebar">
+    <div class="tab" onclick="goHome()">🏠</div>
+    <div class="tab">🎬</div>
+  </div>
+
+  <div id="shorts-container"></div>
+
+<script>
+const container = document.getElementById("shorts-container");
+let loading = false;
+let seen = new Set();
+
+// Load random short
+async function loadShort() {
+  if (loading) return;
+  loading = true;
+
+  const res = await fetch("/api/random-short");
+  const data = await res.json();
+  const id = data.id;
+  const title = data.title;
+  const channel = data.channel;
+
+  // skip duplicates
+  if (seen.has(id)) { loading = false; return loadShort(); }
+  seen.add(id);
+
+  // use nocookie link
+  const shortDiv = document.createElement("div");
+  shortDiv.className = "short";
+  shortDiv.innerHTML = `
+    <iframe id="video-${id}" src="https://www.youtube-nocookie.com/embed/${id}?autoplay=1&mute=1&playsinline=1" allow="autoplay; fullscreen"></iframe>
+    <div class="overlay" id="overlay-${id}" onclick="unmute('${id}')">🔇 Tap to Unmute</div>
+  `;
+  container.appendChild(shortDiv);
+  loading = false;
+}
+
+// Unmute on click
+function unmute(id) {
+  const frame = document.getElementById("video-" + id);
+  const overlay = document.getElementById("overlay-" + id);
+  if (frame) {
+    const src = frame.src.replace("mute=1", "mute=0");
+    frame.src = src;
+    overlay.classList.add("hidden");
+  }
+}
+
+// Infinite scroll
+container.addEventListener("scroll", () => {
+  if (container.scrollTop + container.clientHeight >= container.scrollHeight - 200) {
+    loadShort();
+  }
+});
+
+// Initial load
+for (let i = 0; i < 3; i++) loadShort();
+
+function goHome() {
+  window.location.href = "index.html";
+}
+</script>
+</body>
+</html>
