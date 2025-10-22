@@ -1,266 +1,192 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Moletube</title>
-  <style>
-    body {
-      margin: 0;
-      font-family: "Poppins", sans-serif;
-      background: linear-gradient(135deg, #011b14, #023c2a, #064e3b);
-      color: #ecfdf5;
-      display: flex;
-      height: 100vh;
-      overflow: hidden;
-    }
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Moletube</title>
+<style>
+  body {
+    font-family: "Poppins", sans-serif;
+    background: #001f16;
+    color: #ecfdf5;
+    margin: 0;
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+  }
 
-    /* Sidebar */
-    .sidebar {
-      width: 80px;
-      background: #022c22;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding-top: 1rem;
-      box-shadow: 2px 0 10px #011b14;
-    }
-    .sidebar button {
-      background: none;
-      border: none;
-      color: #a7f3d0;
-      font-size: 1.8rem;
-      margin: 1rem 0;
-      cursor: pointer;
-      transition: 0.2s;
-    }
-    .sidebar button:hover {
-      color: #34d399;
-      transform: scale(1.2);
-    }
+  /* Sidebar */
+  #sidebar {
+    width: 80px;
+    background: #012e25;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-top: 20px;
+    gap: 20px;
+  }
 
-    /* Main content */
-    .content {
-      flex: 1;
-      overflow-y: auto;
-      padding: 2rem;
-    }
+  .tab {
+    cursor: pointer;
+    color: #a7f3d0;
+    text-align: center;
+    transition: 0.3s;
+  }
 
-    h1 {
-      margin-top: 0;
-      color: #a7f3d0;
-    }
+  .tab:hover {
+    color: #34d399;
+  }
 
-    /* Video cards */
-    .video-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 1.5rem;
-    }
-    .video-card {
-      background: #064e3b;
-      border-radius: 1rem;
-      overflow: hidden;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-      transition: transform 0.2s;
-    }
-    .video-card:hover {
-      transform: scale(1.03);
-    }
-    .video-card iframe {
-      width: 100%;
-      aspect-ratio: 16 / 9;
-      border: none;
-    }
-    .video-info {
-      padding: 1rem;
-    }
-    .video-title {
-      font-weight: 600;
-      color: #ecfdf5;
-    }
-    .video-channel {
-      font-size: 0.9rem;
-      color: #6ee7b7;
-    }
+  /* Main content */
+  #main-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+  }
 
-    /* Shorts view */
-    .shorts-container {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      flex-direction: column;
-      height: 100%;
-      width: 100%;
-    }
+  h1 {
+    color: #6ee7b7;
+  }
 
-    .shorts-player {
-      width: 100%;
-      max-width: 420px;
-      aspect-ratio: 9 / 16;
-      border-radius: 16px;
-      overflow: hidden;
-      background: #000;
-      position: relative;
-      box-shadow: 0 0 20px #0f5132;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-    }
+  .video-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 16px;
+  }
 
-    .short-video iframe {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      border: none;
-      object-fit: cover;
-    }
+  .video-card {
+    background: #064e3b;
+    border-radius: 12px;
+    padding: 8px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+  }
 
-    .load-more {
-      margin-top: 1rem;
-      background: #065f46;
-      color: #a7f3d0;
-      border: none;
-      padding: 0.8rem 1.5rem;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: background 0.2s;
-    }
-    .load-more:hover {
-      background: #047857;
-    }
+  iframe {
+    width: 100%;
+    height: 200px;
+    border-radius: 8px;
+    border: none;
+  }
 
-    /* Search */
-    .search-bar {
-      display: flex;
-      gap: 0.5rem;
-      margin-bottom: 1rem;
-    }
-    .search-bar input {
-      flex: 1;
-      padding: 0.7rem;
-      border-radius: 8px;
-      border: none;
-      outline: none;
-      font-size: 1rem;
-    }
-    .search-bar button {
-      background: #065f46;
-      color: #a7f3d0;
-      border: none;
-      border-radius: 8px;
-      padding: 0.7rem 1rem;
-      cursor: pointer;
-    }
-  </style>
+  .video-info {
+    padding: 6px;
+  }
+
+  /* Shorts */
+  #shorts-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+  }
+
+  .short {
+    width: 320px;
+    height: 560px;
+    background: #052e22;
+    border-radius: 16px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0 0 10px rgba(0,0,0,0.4);
+    overflow: hidden;
+  }
+
+  .short iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+  }
+</style>
 </head>
 <body>
-  <div class="sidebar">
-    <button id="homeTab">🏠</button>
-    <button id="shortsTab">🎬</button>
-    <button id="searchTab">🔍</button>
+  <div id="sidebar">
+    <div class="tab" onclick="loadHome()">🏠</div>
+    <div class="tab" onclick="loadSearch()">🔍</div>
+    <div class="tab" onclick="loadShorts()">🎬</div>
   </div>
 
-  <div class="content" id="mainContent">
-    <h1>Moletube Home</h1>
-    <p>Loading logged videos...</p>
+  <div id="main-content">
+    <h1>Welcome to Moletube</h1>
+    <p>Choose a tab to start.</p>
   </div>
 
-  <script>
-    const mainContent = document.getElementById("mainContent");
+<script>
+const mainContent = document.getElementById("main-content");
 
-    async function loadHome() {
-      mainContent.innerHTML = "<h1>Moletube Home</h1><p>Loading logged videos...</p>";
-      const res = await fetch("https://api.jsonbin.io/v3/b/68f851a4ae596e708f23119e/latest", {
-        headers: { "X-Master-Key": "$2a$10$ivvZBRxRHoqZjHMO5OM2oeCpbPhOrq7bzmxdzR.9eB9OoRcPi9UZi" }
-      });
-      const data = await res.json();
-      const logs = Array.isArray(data.record) ? data.record : data.record.data || [];
+async function loadHome() {
+  mainContent.innerHTML = "<h1>Moletube Home</h1><p>Fetching new videos...</p>";
+  await fetch("/api/fetch-random");
 
-      if (!logs.length) {
-        mainContent.innerHTML = "<h1>Moletube Home</h1><p>No videos logged yet.</p>";
-        return;
-      }
+  const res = await fetch("https://api.jsonbin.io/v3/b/68f851a4ae596e708f23119e/latest", {
+    headers: { "X-Master-Key": "$2a$10$ivvZBRxRHoqZjHMO5OM2oeCpbPhOrq7bzmxdzR.9eB9OoRcPi9UZi" }
+  });
+  const data = await res.json();
+  const logs = Array.isArray(data.record) ? data.record : data.record.data || [];
 
-      const grid = logs.reverse().map(v => `
-        <div class="video-card">
-          <iframe src="${v.url}" allowfullscreen></iframe>
-          <div class="video-info">
-            <div class="video-title">${v.title}</div>
-            <div class="video-channel">${v.channel}</div>
-          </div>
+  if (!logs.length) {
+    mainContent.innerHTML = "<h1>Moletube Home</h1><p>No videos logged yet.</p>";
+    return;
+  }
+
+  const grid = logs.reverse().map(v => `
+    <div class="video-card">
+      <iframe src="${v.url}" allowfullscreen></iframe>
+      <div class="video-info">
+        <div class="video-title">${v.title}</div>
+        <div class="video-channel">${v.channel}</div>
+      </div>
+    </div>
+  `).join("");
+
+  mainContent.innerHTML = `<h1>Moletube Home</h1><div class="video-grid">${grid}</div>`;
+}
+
+async function loadShorts() {
+  mainContent.innerHTML = `<div id="shorts-container"><p>Loading Shorts...</p></div>`;
+  const res = await fetch("/api/shorts");
+  const shorts = await res.json();
+  if (!shorts.length) {
+    mainContent.innerHTML = `<div id="shorts-container"><p>No Shorts found.</p></div>`;
+    return;
+  }
+
+  mainContent.innerHTML = `
+    <div id="shorts-container">
+      <div class="short">
+        <iframe src="${shorts[0].url}" allowfullscreen></iframe>
+      </div>
+    </div>
+  `;
+}
+
+function loadSearch() {
+  mainContent.innerHTML = `
+    <h1>Search</h1>
+    <input id="search-input" placeholder="Search videos or channels..." style="width:80%;padding:8px;border-radius:8px;border:none;">
+    <button onclick="performSearch()">Go</button>
+    <div id="results" class="video-grid"></div>
+  `;
+}
+
+async function performSearch() {
+  const q = document.getElementById("search-input").value;
+  const res = await fetch("/api/search?q=" + encodeURIComponent(q));
+  const data = await res.json();
+  const results = data.items || [];
+  const grid = results.map(item => {
+    const id = item.id.videoId;
+    return `
+      <div class="video-card">
+        <iframe src="https://www.youtube-nocookie.com/embed/${id}" allowfullscreen></iframe>
+        <div class="video-info">
+          <div class="video-title">${item.snippet.title}</div>
+          <div class="video-channel">${item.snippet.channelTitle}</div>
         </div>
-      `).join("");
-
-      mainContent.innerHTML = `<h1>Moletube Home</h1><div class="video-grid">${grid}</div>`;
-    }
-
-    async function loadShorts() {
-      mainContent.innerHTML = `
-        <div class="shorts-container">
-          <div class="shorts-player" id="shortsPlayer"></div>
-          <button class="load-more" id="nextShort">Next Short</button>
-        </div>
-      `;
-      await showShort();
-      document.getElementById("nextShort").onclick = showShort;
-    }
-
-    async function showShort() {
-      const res = await fetch("/api/shorts");
-      const data = await res.json();
-      if (!data.length) return;
-      const short = data[0];
-      document.getElementById("shortsPlayer").innerHTML = `
-        <div class="short-video">
-          <iframe src="${short.url}?autoplay=1&playsinline=1&mute=0" allowfullscreen></iframe>
-        </div>
-      `;
-    }
-
-    function loadSearch() {
-      mainContent.innerHTML = `
-        <h1>Search Videos</h1>
-        <div class="search-bar">
-          <input id="searchInput" placeholder="Search YouTube..." />
-          <button onclick="doSearch()">Search</button>
-        </div>
-        <div id="searchResults"></div>
-      `;
-    }
-
-    async function doSearch() {
-      const q = document.getElementById("searchInput").value;
-      const res = await fetch("/api/search?q=" + encodeURIComponent(q));
-      const data = await res.json();
-      const container = document.getElementById("searchResults");
-
-      if (!data.items) {
-        container.innerHTML = "<p>No results found.</p>";
-        return;
-      }
-
-      const html = data.items.map(v => `
-        <div class="video-card">
-          <iframe src="https://www.youtube-nocookie.com/embed/${v.id.videoId}" allowfullscreen></iframe>
-          <div class="video-info">
-            <div class="video-title">${v.snippet.title}</div>
-            <div class="video-channel">${v.snippet.channelTitle}</div>
-          </div>
-        </div>
-      `).join("");
-      container.innerHTML = `<div class="video-grid">${html}</div>`;
-    }
-
-    // Tab switching
-    document.getElementById("homeTab").onclick = loadHome;
-    document.getElementById("shortsTab").onclick = loadShorts;
-    document.getElementById("searchTab").onclick = loadSearch;
-
-    // Load homepage first
-    loadHome();
-  </script>
+      </div>`;
+  }).join("");
+  document.getElementById("results").innerHTML = grid;
+}
+</script>
 </body>
 </html>
