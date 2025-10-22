@@ -4,13 +4,12 @@ const app = express();
 app.use(express.json());
 app.use(express.static("."));
 
-// Config (you can hardcode these for JSBin testing)
-const YT_API_KEY = process.env.YT_API_KEY || "YOUR_YOUTUBE_API_KEY";
-const BIN_ID = process.env.BIN_ID || "YOUR_JSONBIN_ID";
-const JSONBIN_KEY = process.env.JSONBIN_KEY || "YOUR_JSONBIN_MASTER_KEY";
+// Config
+const YT_API_KEY = process.env.YT_API_KEY || "AIzaSyDbsZ26DZGrXukzrZGHUEsOUQ_dr_sIuAY";
+const BIN_ID = process.env.BIN_ID || "68f851a4ae596e708f23119e";
+const JSONBIN_KEY = process.env.JSONBIN_KEY || "$2a$10$ivvZBRxRHoqZjHMO5OM2oeCpbPhOrq7bzmxdzR.9eB9OoRcPi9UZi";
 const BASE_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
 
-//  Helper: extract YouTube ID
 function extractYouTubeId(url) {
   try {
     const u = new URL(url);
@@ -23,20 +22,16 @@ function extractYouTubeId(url) {
   }
 }
 
-// Read logs
 async function readLogs() {
   try {
     const res = await fetch(BASE_URL, { headers: { "X-Master-Key": JSONBIN_KEY } });
     const data = await res.json();
-    return Array.isArray(data.record)
-      ? data.record
-      : data.record.data || [];
+    return Array.isArray(data.record) ? data.record : data.record.data || [];
   } catch {
     return [];
   }
 }
 
-// 🧩 Save logs
 async function saveLogs(logs) {
   await fetch(BASE_URL, {
     method: "PUT",
@@ -48,7 +43,7 @@ async function saveLogs(logs) {
   });
 }
 
-// /api/log — convert & log once
+// Convert + log
 app.post("/api/log", async (req, res) => {
   const { url } = req.body;
   const id = extractYouTubeId(url);
@@ -76,7 +71,7 @@ app.post("/api/log", async (req, res) => {
   res.json(entry);
 });
 
-// /api/shorts — random nocookie Shorts feed
+// shorts feed
 app.get("/api/shorts", async (req, res) => {
   const randomWords = ["funny", "music", "tech", "animals", "sports", "games"];
   const query = randomWords[Math.floor(Math.random() * randomWords.length)];
@@ -106,5 +101,13 @@ app.get("/api/shorts", async (req, res) => {
   res.json(newShorts);
 });
 
-// Start server
-app.listen(3000, () => console.log("✅ Moletube server running on port 3000"));
+// Search API
+app.get("/api/search", async (req, res) => {
+  const q = req.query.q || "popular";
+  const ytUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=10&q=${encodeURIComponent(q)}&key=${YT_API_KEY}`;
+  const ytRes = await fetch(ytUrl);
+  const data = await ytRes.json();
+  res.json(data);
+});
+
+app.listen(3000, () => console.log("✅ Moletube running on port 3000"));
