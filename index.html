@@ -94,18 +94,17 @@
 <body>
   <div id="sidebar">
     <div class="tab" onclick="loadHome()">🏠</div>
-    <div class="tab" onclick="loadSearch()">🔍</div>
     <div class="tab" onclick="loadShorts()">🎬</div>
   </div>
 
   <div id="main-content">
-    <h1>Welcome to Moletube</h1>
-    <p>Choose a tab to start.</p>
+    <h1>Loading Moletube...</h1>
   </div>
 
 <script>
 const mainContent = document.getElementById("main-content");
 
+// Load Home with Search Bar
 async function loadHome() {
   mainContent.innerHTML = `
     <div id="search-bar">
@@ -143,11 +142,7 @@ async function loadHome() {
   mainContent.innerHTML += `<div class="video-grid" id="results">${grid}</div>`;
 }
 
-function openVideo(id, title, channel) {
-  localStorage.setItem("videoData", JSON.stringify({ id, title, channel }));
-  window.location.href = "watch.html?id=" + id;
-}
-
+// Search directly on Home
 async function performSearch() {
   const q = document.getElementById("search-input").value;
   if (!q.trim()) return loadHome();
@@ -169,20 +164,19 @@ async function performSearch() {
   document.getElementById("results").innerHTML = grid;
 }
 
-function loadSearch() {
-  mainContent.innerHTML = `
-    <h1>Search</h1>
-    <div style="display:flex;gap:8px;margin-bottom:10px;">
-      <input id="search-input" placeholder="Search videos or channels..." style="flex:1;padding:8px;border-radius:8px;border:none;">
-      <button onclick="performSearch()">Go</button>
-    </div>
-    <div id="results" class="video-grid"></div>
-  `;
-}
-
-async function loadShorts() {
+// Shorts tab
+function loadShorts() {
   window.location.href = "shorts.html";
 }
+
+// Open video viewer
+function openVideo(id, title, channel) {
+  localStorage.setItem("videoData", JSON.stringify({ id, title, channel }));
+  window.location.href = "watch.html?id=" + id;
+}
+
+// Load homepage on start
+window.addEventListener("load", loadHome);
 </script>
 </body>
 </html>
