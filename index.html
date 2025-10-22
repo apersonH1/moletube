@@ -31,8 +31,8 @@
     color: #a7f3d0;
     text-align: center;
     transition: 0.3s;
+    font-size: 24px;
   }
-
   .tab:hover {
     color: #34d399;
   }
@@ -42,6 +42,7 @@
     flex: 1;
     overflow-y: auto;
     padding: 20px;
+    position: relative;
   }
 
   h1 {
@@ -52,6 +53,7 @@
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
     gap: 16px;
+    margin-top: 80px;
   }
 
   .video-card {
@@ -68,16 +70,54 @@
     border: none;
   }
 
-  .video-info {
-    padding: 6px;
+  .video-info { padding: 6px; }
+
+  /* Sticky search bar */
+  #search-bar {
+    position: sticky;
+    top: 0;
+    background: #022c22;
+    padding: 10px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    z-index: 10;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.4);
   }
 
-  /* Shorts */
-  #shorts-container {
+  #search-input {
+    flex: 1;
+    padding: 8px;
+    border-radius: 8px;
+    border: none;
+    font-size: 14px;
+  }
+
+  button {
+    background: #059669;
+    color: #ecfdf5;
+    border: none;
+    border-radius: 8px;
+    padding: 8px 12px;
+    cursor: pointer;
+    font-weight: bold;
+  }
+
+  button:hover {
+    background: #10b981;
+  }
+
+  /* Shorts scroll view */
+  #shorts-feed {
     display: flex;
-    justify-content: center;
+    flex-direction: column;
     align-items: center;
     height: 100%;
+    overflow-y: scroll;
+    scroll-snap-type: y mandatory;
+    padding: 0;
+    margin: 0;
   }
 
   .short {
@@ -90,12 +130,39 @@
     align-items: center;
     box-shadow: 0 0 10px rgba(0,0,0,0.4);
     overflow: hidden;
+    scroll-snap-align: start;
+    margin: 20px 0;
+    position: relative;
   }
 
   .short iframe {
     width: 100%;
     height: 100%;
     border: none;
+  }
+
+  /* Overlay for unmute */
+  #unmute-overlay {
+    position: fixed;
+    top: 0;
+    left: 80px;
+    width: calc(100% - 80px);
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #ecfdf5;
+    font-size: 24px;
+    z-index: 1000;
+    backdrop-filter: blur(4px);
+    cursor: pointer;
+    transition: opacity 0.4s ease;
+  }
+
+  #unmute-overlay.hidden {
+    opacity: 0;
+    pointer-events: none;
   }
 </style>
 </head>
@@ -115,7 +182,15 @@
 const mainContent = document.getElementById("main-content");
 
 async function loadHome() {
-  mainContent.innerHTML = "<h1>Moletube Home</h1><p>Fetching new videos...</p>";
+  mainContent.innerHTML = `
+    <div id="search-bar">
+      <input id="search-input" placeholder="Search videos or channels...">
+      <button onclick="performSearch()">🔍</button>
+    </div>
+    <h1>Moletube Home</h1>
+    <p>Loading videos...</p>
+  `;
+
   await fetch("/api/fetch-random");
 
   const res = await fetch("https://api.jsonbin.io/v3/b/68f851a4ae596e708f23119e/latest", {
@@ -125,7 +200,7 @@ async function loadHome() {
   const logs = Array.isArray(data.record) ? data.record : data.record.data || [];
 
   if (!logs.length) {
-    mainContent.innerHTML = "<h1>Moletube Home</h1><p>No videos logged yet.</p>";
+    mainContent.innerHTML += "<p>No videos yet.</p>";
     return;
   }
 
@@ -133,59 +208,142 @@ async function loadHome() {
     <div class="video-card">
       <iframe src="${v.url}" allowfullscreen></iframe>
       <div class="video-info">
-        <div class="video-title">${v.title}</div>
-        <div class="video-channel">${v.channel}</div>
+        <div>${v.title}</div>
+        <div>${v.channel}</div>
       </div>
     </div>
   `).join("");
-
-  mainContent.innerHTML = `<h1>Moletube Home</h1><div class="video-grid">${grid}</div>`;
-}
-
-async function loadShorts() {
-  mainContent.innerHTML = `<div id="shorts-container"><p>Loading Shorts...</p></div>`;
-  const res = await fetch("/api/shorts");
-  const shorts = await res.json();
-  if (!shorts.length) {
-    mainContent.innerHTML = `<div id="shorts-container"><p>No Shorts found.</p></div>`;
-    return;
-  }
-
-  mainContent.innerHTML = `
-    <div id="shorts-container">
-      <div class="short">
-        <iframe src="${shorts[0].url}" allowfullscreen></iframe>
-      </div>
-    </div>
-  `;
-}
-
-function loadSearch() {
-  mainContent.innerHTML = `
-    <h1>Search</h1>
-    <input id="search-input" placeholder="Search videos or channels..." style="width:80%;padding:8px;border-radius:8px;border:none;">
-    <button onclick="performSearch()">Go</button>
-    <div id="results" class="video-grid"></div>
-  `;
+  mainContent.innerHTML += `<div class="video-grid" id="results">${grid}</div>`;
 }
 
 async function performSearch() {
   const q = document.getElementById("search-input").value;
+  if (!q.trim()) return loadHome();
   const res = await fetch("/api/search?q=" + encodeURIComponent(q));
   const data = await res.json();
   const results = data.items || [];
+
   const grid = results.map(item => {
     const id = item.id.videoId;
     return `
       <div class="video-card">
         <iframe src="https://www.youtube-nocookie.com/embed/${id}" allowfullscreen></iframe>
         <div class="video-info">
-          <div class="video-title">${item.snippet.title}</div>
-          <div class="video-channel">${item.snippet.channelTitle}</div>
+          <div>${item.snippet.title}</div>
+          <div>${item.snippet.channelTitle}</div>
         </div>
       </div>`;
   }).join("");
   document.getElementById("results").innerHTML = grid;
+}
+
+// === Shorts with click-to-unmute ===
+async function loadShorts() {
+  mainContent.innerHTML = `<div id="shorts-feed"><p>Loading Shorts...</p></div>`;
+  const res = await fetch("/api/shorts");
+  const shorts = await res.json();
+
+  if (!shorts.length) {
+    mainContent.innerHTML = `<div id="shorts-feed"><p>No Shorts found.</p></div>`;
+    return;
+  }
+
+  const feed = document.createElement("div");
+  feed.id = "shorts-feed";
+
+  shorts.forEach(s => {
+    const shortEl = document.createElement("div");
+    shortEl.className = "short";
+    shortEl.innerHTML = `
+      <iframe 
+        src="${s.url}?enablejsapi=1&mute=1&autoplay=1&controls=0" 
+        allow="autoplay; encrypted-media" 
+        allowfullscreen></iframe>`;
+    feed.appendChild(shortEl);
+  });
+
+  mainContent.innerHTML = "";
+  mainContent.appendChild(feed);
+
+  let players = [];
+  let soundEnabled = false;
+
+  function onYouTubeIframeAPIReady() {
+    const iframes = feed.querySelectorAll("iframe");
+    iframes.forEach((frame, i) => {
+      const player = new YT.Player(frame, {
+        events: { onReady: () => { if (i === 0) player.playVideo(); } }
+      });
+      players.push(player);
+    });
+  }
+
+  if (typeof YT === "undefined" || typeof YT.Player === "undefined") {
+    const tag = document.createElement("script");
+    tag.src = "https://www.youtube.com/iframe_api";
+    document.body.appendChild(tag);
+    window.onYouTubeIframeAPIReady = onYouTubeIframeAPIReady;
+  } else {
+    onYouTubeIframeAPIReady();
+  }
+
+  // Scroll to play visible shorts
+  feed.addEventListener("scroll", () => {
+    const shortsEls = feed.querySelectorAll(".short");
+    shortsEls.forEach((el, i) => {
+      const rect = el.getBoundingClientRect();
+      const visible = rect.top >= 0 && rect.bottom <= window.innerHeight;
+      if (players[i]) {
+        if (visible) players[i].playVideo();
+        else players[i].pauseVideo();
+      }
+    });
+  });
+
+  // Unmute overlay
+  const overlay = document.createElement("div");
+  overlay.id = "unmute-overlay";
+  overlay.textContent = "🔊 Click to unmute";
+  document.body.appendChild(overlay);
+
+  overlay.addEventListener("click", () => {
+    if (!soundEnabled) {
+      soundEnabled = true;
+      overlay.classList.add("hidden");
+      players.forEach(p => {
+        try { p.unMute(); } catch {}
+      });
+    }
+  });
+
+  // Infinite scroll for more Shorts
+  feed.addEventListener("scroll", async () => {
+    if (feed.scrollTop + feed.clientHeight >= feed.scrollHeight - 100) {
+      const next = await fetch("/api/shorts");
+      const newShorts = await next.json();
+      newShorts.forEach(s => {
+        const shortEl = document.createElement("div");
+        shortEl.className = "short";
+        shortEl.innerHTML = `
+          <iframe 
+            src="${s.url}?enablejsapi=1&mute=${soundEnabled ? 0 : 1}&autoplay=1&controls=0" 
+            allow="autoplay; encrypted-media" 
+            allowfullscreen></iframe>`;
+        feed.appendChild(shortEl);
+      });
+    }
+  });
+}
+
+function loadSearch() {
+  mainContent.innerHTML = `
+    <h1>Search</h1>
+    <div style="display:flex;gap:8px;margin-bottom:10px;">
+      <input id="search-input" placeholder="Search videos or channels..." style="flex:1;padding:8px;border-radius:8px;border:none;">
+      <button onclick="performSearch()">Go</button>
+    </div>
+    <div id="results" class="video-grid"></div>
+  `;
 }
 </script>
 </body>
