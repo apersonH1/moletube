@@ -1,66 +1,54 @@
 import express from "express";
-import fs from "fs"; // optional if you ever want local backup
 
 const app = express();
 app.use(express.json());
 app.use(express.static("."));
 
-// YouTube API key (set as environment variable in Render)
-const YT_API_KEY = process.env.YT_API_KEY;
-
-// JSONBin info (set these in Render → Environment Variables)
-const BIN_ID = process.env.BIN_ID;
-const JSONBIN_KEY = process.env.JSONBIN_KEY;
+// Config (you can hardcode these for JSBin testing)
+const YT_API_KEY = process.env.YT_API_KEY || "YOUR_YOUTUBE_API_KEY";
+const BIN_ID = process.env.BIN_ID || "YOUR_JSONBIN_ID";
+const JSONBIN_KEY = process.env.JSONBIN_KEY || "YOUR_JSONBIN_MASTER_KEY";
 const BASE_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
 
-// Extract YouTube video ID
+//  Helper: extract YouTube ID
 function extractYouTubeId(url) {
   try {
-    const parsed = new URL(url);
-    if (parsed.hostname.includes("youtu.be")) return parsed.pathname.slice(1);
-    if (parsed.searchParams.get("v")) return parsed.searchParams.get("v");
-    const match = parsed.pathname.match(/\/(embed|shorts)\/([^/?]+)/);
+    const u = new URL(url);
+    if (u.hostname.includes("youtu.be")) return u.pathname.slice(1);
+    if (u.searchParams.get("v")) return u.searchParams.get("v");
+    const match = u.pathname.match(/\/(embed|shorts)\/([^/?]+)/);
     return match ? match[2] : null;
   } catch {
     return null;
   }
 }
 
-// Read logs from JSONBin
+// Read logs
 async function readLogs() {
   try {
-    const res = await fetch(BASE_URL, {
-      headers: { "X-Master-Key": JSONBIN_KEY }
-    });
+    const res = await fetch(BASE_URL, { headers: { "X-Master-Key": JSONBIN_KEY } });
     const data = await res.json();
-    // Support both [] and { data: [] } bin formats
     return Array.isArray(data.record)
       ? data.record
       : data.record.data || [];
-  } catch (err) {
-    console.error("❌ Failed to load logs:", err);
+  } catch {
     return [];
   }
 }
 
-// Save logs back to JSONBin
+// 🧩 Save logs
 async function saveLogs(logs) {
-  try {
-    await fetch(BASE_URL, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        "X-Master-Key": JSONBIN_KEY
-      },
-      // Save using object wrapper for compatibility
-      body: JSON.stringify({ data: logs })
-    });
-  } catch (err) {
-    console.error("❌ Failed to save logs:", err);
-  }
+  await fetch(BASE_URL, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      "X-Master-Key": JSONBIN_KEY,
+    },
+    body: JSON.stringify({ data: logs }),
+  });
 }
 
-// POST /api/log — convert & log (no duplicates)
+// /api/log — convert & log once
 app.post("/api/log", async (req, res) => {
   const { url } = req.body;
   const id = extractYouTubeId(url);
@@ -69,42 +57,54 @@ app.post("/api/log", async (req, res) => {
   const noCookieUrl = `https://www.youtube-nocookie.com/embed/${id}`;
   const logs = await readLogs();
 
-  const existing = logs.find(entry => entry.url === noCookieUrl);
-  if (existing) return res.status(200).json({ ...existing, duplicate: true });
+  if (logs.find((v) => v.url === noCookieUrl))
+    return res.status(200).json({ url: noCookieUrl, duplicate: true });
 
-  // Fetch metadata from YouTube
-  const apiUrl = `https://www.googleapis.com/youtube/v3/videos?id=${id}&part=snippet&key=${YT_API_KEY}`;
-  const apiRes = await fetch(apiUrl);
-  const data = await apiRes.json();
+  const infoUrl = `https://www.googleapis.com/youtube/v3/videos?id=${id}&part=snippet&key=${YT_API_KEY}`;
+  const infoRes = await fetch(infoUrl);
+  const info = await infoRes.json();
+  const snippet = info.items?.[0]?.snippet || {};
 
-  let title = "Unknown Title";
-  let channel = "Unknown Channel";
+  const entry = {
+    url: noCookieUrl,
+    title: snippet.title || "Unknown Title",
+    channel: snippet.channelTitle || "Unknown Channel",
+    loggedAt: new Date().toISOString(),
+  };
+  logs.push(entry);
+  await saveLogs(logs);
+  res.json(entry);
+});
 
-  if (data.items && data.items.length > 0) {
-    const snippet = data.items[0].snippet;
-    title = snippet.title;
-    channel = snippet.channelTitle;
+// /api/shorts — random nocookie Shorts feed
+app.get("/api/shorts", async (req, res) => {
+  const randomWords = ["funny", "music", "tech", "animals", "sports", "games"];
+  const query = randomWords[Math.floor(Math.random() * randomWords.length)];
+  const ytUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&videoDuration=short&maxResults=5&q=${query}&key=${YT_API_KEY}`;
+  const ytRes = await fetch(ytUrl);
+  const data = await ytRes.json();
+
+  const logs = await readLogs();
+  const newShorts = [];
+
+  for (const item of data.items || []) {
+    const id = item.id.videoId;
+    const noCookieUrl = `https://www.youtube-nocookie.com/embed/${id}`;
+    if (logs.find((v) => v.url === noCookieUrl)) continue;
+
+    const entry = {
+      url: noCookieUrl,
+      title: item.snippet.title,
+      channel: item.snippet.channelTitle,
+      loggedAt: new Date().toISOString(),
+    };
+    newShorts.push(entry);
+    logs.push(entry);
   }
 
-  const newEntry = {
-    url: noCookieUrl,
-    title,
-    channel,
-    loggedAt: new Date().toISOString()
-  };
-
-  logs.push(newEntry);
-  await saveLogs(logs);
-
-  res.json({ ...newEntry, duplicate: false });
+  if (newShorts.length) await saveLogs(logs);
+  res.json(newShorts);
 });
 
-// GET /api/list — show all logs
-app.get("/api/list", async (req, res) => {
-  const logs = await readLogs();
-  res.json(logs);
-});
-
-app.listen(3000, () =>
-  console.log("Server running on http://localhost:3000")
-);
+// Start server
+app.listen(3000, () => console.log("✅ Moletube server running on port 3000"));
